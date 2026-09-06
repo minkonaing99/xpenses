@@ -52,6 +52,10 @@
 .heat__cell--l0 {
   background: color-mix(in oklch, var(--ink) 6%, var(--paper));
 }
+
+:root[data-theme="dark"] .heat__cell--l0 {
+  background: color-mix(in oklch, var(--paper-raised) 82%, var(--ink-soft));
+}
 .heat__cell--l1 {
   background: color-mix(in oklch, var(--accent) 22%, var(--paper));
 }
