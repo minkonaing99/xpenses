@@ -1,12 +1,136 @@
-.plans__forecast, .plans__list { margin: var(--sp-5) 0; }
-.plans h2 { font-size: var(--t-body); margin: 0 0 var(--sp-3); }
-.plans__account, .plans__item { padding: var(--sp-3); background: var(--paper-sunken); border-radius: var(--r-md); margin-top: var(--sp-2); }
-.plans__account { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-1); }
-.plans__account small, .plans__item span { color: var(--ink-faint); }
-.plans__account small { grid-column: 1 / -1; }
-.plans__item { display: grid; grid-template-columns: 1fr auto; gap: var(--sp-2); }
-.plans__item div:first-child { display: grid; gap: 2px; }
-.plans__actions { grid-column: 1 / -1; display: flex; gap: var(--sp-2); }
-.planform { display: grid; gap: var(--sp-3); }
-.planform label { display: grid; gap: var(--sp-1); }
-.planform input { min-height: 44px; }
+.plans {
+  padding: 0 var(--sp-5) var(--sp-7);
+}
+
+.plans__forecast,
+.plans__list {
+  margin-top: var(--sp-6);
+}
+
+.plans h2 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--t-body);
+}
+
+.plans__account,
+.plans__item {
+  margin-top: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.plans__account {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-1);
+}
+
+.plans__account small,
+.plans__item span,
+.plans__month small,
+.planform__wait small {
+  color: var(--ink-faint);
+}
+
+.plans__account small {
+  grid-column: 1 / -1;
+}
+
+.plans__month {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  background: var(--accent-wash);
+  border-radius: var(--r-md);
+}
+
+.plans__month small {
+  grid-column: 1 / -1;
+}
+
+.plans__item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-2);
+}
+
+.plans__item div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.plans__actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: var(--sp-2);
+}
+
+.plans__actions .btn {
+  flex: 1;
+}
+
+.planform {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.planform__amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--sp-1);
+  padding: var(--sp-4) 0 var(--sp-2);
+}
+
+.planform__baht {
+  color: var(--ink-faint);
+  font-size: var(--t-figure);
+  font-weight: 700;
+}
+
+.planform__amount input {
+  field-sizing: content;
+  width: auto;
+  min-width: 1ch;
+  max-width: 9ch;
+  border: 0;
+  background: none;
+  font-size: var(--t-hero);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-align: center;
+}
+
+.planform__amount input:focus {
+  outline: none;
+}
+
+.planform__row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-3);
+}
+
+.planform__wait small {
+  margin-top: calc(-1 * var(--sp-1));
+  font-size: var(--t-caption);
+}
+
+@media (max-width: 32rem) {
+  .plans {
+    padding-inline: var(--sp-4);
+  }
+
+  .planform__row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .planform__row .fld {
+    width: 100%;
+  }
+}

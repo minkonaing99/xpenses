@@ -10,6 +10,7 @@ import { MoneyInput } from "../../ui/MoneyInput";
 import { PageHeader } from "../../ui/PageHeader";
 import { Select } from "../../ui/Select";
 import { Sheet } from "../../ui/Sheet";
+import { Chips } from "../transactions/Chips";
 import "../../ui/form.css";
 import "./PlansScreen.css";
 
@@ -17,7 +18,6 @@ export function PlansScreen() {
   const { month } = useMonth();
   const plans = usePlans(month);
   const summary = useSummary(month);
-  const categories = useCategories();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<PlannedPurchase | null>(null);
   const confirm = useConfirmPlan();
@@ -48,30 +48,28 @@ export function PlansScreen() {
         </div>
       </article>)}
     </section>
-    <section className="plans__forecast">
-      <h2>This month's expense forecast</h2>
-      {(plans.data?.budgets ?? []).map((budget) => <div className="plans__account" key={budget.id}>
-        <span>{categories.data?.find((category) => category.id === budget.categoryId)?.name ?? budget.categoryId}</span><Money amount={budget.forecastSpent} />
-        <small>Actual <Money amount={budget.spent} /> + planned <Money amount={budget.planned} /></small>
-      </div>)}
-    </section>
     <PlanForm open={open} editing={editing} onClose={() => setOpen(false)} />
   </div>;
+}
+
+function readyAfter(date: string, days: number) {
+  const [year, month, day] = date.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + days)).toLocaleDateString("en-CA", { timeZone: "UTC" });
 }
 
 function PlanForm({ open, editing, onClose }: { open: boolean; editing: PlannedPurchase | null; onClose: () => void }) {
   const accounts = useAccounts(); const categories = useCategories(); const create = useCreatePlan(); const update = useUpdatePlan();
   const [name, setName] = useState(""); const [amount, setAmount] = useState(""); const [accountId, setAccountId] = useState<string | null>(null); const [categoryId, setCategoryId] = useState<string | null>(null); const [plannedDate, setPlannedDate] = useState(today()); const [waitDays, setWaitDays] = useState("7");
+  const [dirty, setDirty] = useState(false);
   const satang = bahtToSatang(amount); const wait = Number(waitDays); const valid = !!name.trim() && !!satang && satang > 0 && !!accountId && !!categoryId && Number.isInteger(wait) && wait >= 0 && wait <= 30;
-  useEffect(() => { if (open) { setName(editing?.name ?? ""); setAmount(editing ? String(editing.amount / 100) : ""); setAccountId(editing?.accountId ?? null); setCategoryId(editing?.categoryId ?? null); setPlannedDate(editing?.plannedDate ?? today()); setWaitDays(String(editing?.waitDays ?? 7)); } }, [open, editing]);
+  useEffect(() => { if (open) { setDirty(false); setName(editing?.name ?? ""); setAmount(editing ? String(editing.amount / 100) : ""); setAccountId(editing?.accountId ?? null); setCategoryId(editing?.categoryId ?? null); setPlannedDate(editing?.plannedDate ?? today()); setWaitDays(String(editing?.waitDays ?? 7)); } }, [open, editing]);
   async function save() { if (!valid || !satang || !accountId || !categoryId) return; const fields = { name: name.trim(), amount: satang, accountId, categoryId, plannedDate, waitDays: wait }; if (editing) await update.mutateAsync({ id: editing.id, patch: fields }); else await create.mutateAsync({ id: crypto.randomUUID(), ...fields }); onClose(); }
-  return <Sheet open={open} onClose={onClose} title={editing ? "Edit plan" : "Plan purchase"}><div className="planform">
-    <label><span className="fld__label">Item</span><input value={name} maxLength={255} onChange={(e) => setName(e.target.value)} /></label>
-    <label><span className="fld__label">Price (฿)</span><MoneyInput value={amount} onChange={setAmount} ariaLabel="Price in baht" /></label>
-    <Select label="Account" options={(accounts.data ?? []).map((a) => ({ value: a.id, label: a.name }))} value={accountId} onChange={setAccountId} placeholder="Select account" />
-    <Select label="Category" options={(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))} value={categoryId} onChange={setCategoryId} placeholder="Select category" />
-    <label><span className="fld__label">Planned date</span><input type="date" min={today()} value={plannedDate} onChange={(e) => setPlannedDate(e.target.value)} /></label>
-    <label><span className="fld__label">Wait days</span><input type="number" min="0" max="30" value={waitDays} onChange={(e) => setWaitDays(e.target.value)} /></label>
+  return <Sheet open={open} onClose={onClose} dirty={dirty} title={editing ? "Edit plan" : "Plan purchase"}><div className="planform">
+    <label className="planform__amount"><span className="planform__baht" aria-hidden="true">฿</span><MoneyInput value={amount} onChange={(value) => { setAmount(value); setDirty(true); }} ariaLabel="Price in baht" autoFocus={!editing} /></label>
+    <div className="fld"><span className="fld__label">Category</span><Select label="Category" options={(categories.data ?? []).map((c) => ({ value: c.id, label: c.name }))} value={categoryId} onChange={(value) => { setCategoryId(value); setDirty(true); }} placeholder="Select category" /></div>
+    <div className="fld"><span className="fld__label">Paid from</span><Chips options={(accounts.data ?? []).map((a) => ({ value: a.id, label: a.name }))} value={accountId} onChange={(value) => { setAccountId(value); setDirty(true); }} /></div>
+    <div className="planform__row"><label className="fld fld--grow"><span className="fld__label">Item</span><input className="add__input" value={name} maxLength={255} onChange={(e) => { setName(e.target.value); setDirty(true); }} /></label><label className="fld"><span className="fld__label">Planned date</span><input className="add__input add__date" type="date" min={today()} value={plannedDate} onChange={(e) => { setPlannedDate(e.target.value); setDirty(true); }} /></label></div>
+    <label className="fld planform__wait"><span className="fld__label">Wait days</span><input className="add__input" type="number" min="0" max="30" value={waitDays} onChange={(e) => { setWaitDays(e.target.value); setDirty(true); }} /><small>Ready after {wait} days: {readyAfter(today(), Number.isFinite(wait) ? wait : 0)}</small></label>
     <Button block disabled={!valid || create.isPending || update.isPending} onClick={save}>{create.isPending || update.isPending ? "Saving…" : "Save plan"}</Button>
   </div></Sheet>;
 }

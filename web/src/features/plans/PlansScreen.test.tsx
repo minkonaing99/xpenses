@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../lib/api", async (orig) => {
@@ -24,5 +24,15 @@ describe("PlansScreen", () => {
     renderApp(<PlansScreen />);
     expect(await screen.findByText("Headphones")).toBeInTheDocument();
     expect(screen.getByText("Forecast after plans")).toBeInTheDocument();
+  });
+
+  it("uses the transaction-style purchase form", async () => {
+    renderApp(<PlansScreen />);
+    fireEvent.click(await screen.findByRole("button", { name: "Add" }));
+
+    expect(screen.getByLabelText("Price in baht")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Cash" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Category")).toBeInTheDocument();
+    expect(screen.getByText(/Ready after 7 days/i)).toBeInTheDocument();
   });
 });
