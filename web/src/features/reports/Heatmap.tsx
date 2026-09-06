@@ -61,7 +61,7 @@ export function Heatmap() {
                 {total > 0 && <span className="heat__amount">฿{formatSatang(total)}</span>}
                 {spend?.topCategoryName && <span className="heat__category">{spend.topCategoryName}</span>}
               </span>}
-              {(plan || recurrence) && <span className="heat__events">{plan && <Link className="heat__event" to="/plans">Plan</Link>}{recurrence && <Link className="heat__event" to="/settings/recurring">Recurring</Link>}</span>}
+              {(plan || recurrence) && <span className="heat__events">{plan && <Link className="heat__event" to="/plans">{plan.name}</Link>}{recurrence && <Link className="heat__event" to="/settings/recurring">{recurrence.note ?? "Recurring"}</Link>}</span>}
             </div>
           );
         })}
