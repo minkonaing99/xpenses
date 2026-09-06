@@ -5,6 +5,9 @@
   margin-top: var(--sp-2);
 }
 
+.heat-scroll { overflow-x: auto; scrollbar-width: none; }
+.heat-scroll::-webkit-scrollbar { display: none; }
+
 .heat__dow {
   text-align: center;
   font-size: 11px;
@@ -34,7 +37,12 @@
 .heat__date { position: absolute; top: 6px; left: 6px; font-size: 13px; font-weight: 700; }
 .heat__summary { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; }
 .heat__category, .heat__event { overflow: hidden; max-width: 100%; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.heat__events { position: absolute; right: 6px; bottom: 6px; left: 6px; display: grid; justify-items: center; gap: 2px; }
 .heat__event { color: inherit; text-decoration: underline; }
+
+@media (max-width: 32rem) {
+  .heat { min-width: 36rem; }
+}
 
 .heat__cell--blank {
   background: transparent;

@@ -39,7 +39,7 @@ export function Heatmap() {
   return (
     <section className="rcard">
       <h2 className="rcard__title">Daily spend</h2>
-      <div className="heat">
+      <div className="heat-scroll"><div className="heat">
         {DOW.map((d, i) => (
           <span key={`d${i}`} className="heat__dow" aria-hidden="true">
             {d}
@@ -61,12 +61,11 @@ export function Heatmap() {
                 {total > 0 && <span className="heat__amount">฿{formatSatang(total)}</span>}
                 {spend?.topCategoryName && <span className="heat__category">{spend.topCategoryName}</span>}
               </span>}
-              {plan && <Link className="heat__event" to="/plans">Plan</Link>}
-              {recurrence && <Link className="heat__event" to="/settings/recurring">Recurring</Link>}
+              {(plan || recurrence) && <span className="heat__events">{plan && <Link className="heat__event" to="/plans">Plan</Link>}{recurrence && <Link className="heat__event" to="/settings/recurring">Recurring</Link>}</span>}
             </div>
           );
         })}
-      </div>
+      </div></div>
     </section>
   );
 }
