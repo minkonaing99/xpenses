@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { useDailySpend } from "../../api/hooks";
+import { Link } from "react-router-dom";
+import { useDailySpend, usePlans, useUpcomingRange } from "../../api/hooks";
 import { useMonth } from "../../app/MonthContext";
 import { formatSatang } from "../../lib/money";
 import "./Heatmap.css";
@@ -25,6 +26,8 @@ export function Heatmap() {
   const from = days[0];
   const to = days[days.length - 1];
   const q = useDailySpend(from, to);
+  const plans = usePlans(month);
+  const recurring = useUpcomingRange(from, to);
 
   const byDate = useMemo(() => {
     return new Map((q.data ?? []).map((d) => [d.date, d]));
@@ -36,7 +39,7 @@ export function Heatmap() {
   return (
     <section className="rcard">
       <h2 className="rcard__title">Daily spend</h2>
-      <div className="heat" role="img" aria-label="Calendar heatmap of daily spending">
+      <div className="heat">
         {DOW.map((d, i) => (
           <span key={`d${i}`} className="heat__dow" aria-hidden="true">
             {d}
@@ -49,12 +52,16 @@ export function Heatmap() {
           const spend = byDate.get(iso);
           const total = spend?.total ?? 0;
           const level = total === 0 ? 0 : Math.min(4, Math.ceil((total / max) * 4));
-          const title = `${iso}: ฿${formatSatang(total)}${spend?.topCategoryName ? `. Highest: ${spend.topCategoryName}` : ""}`;
+          const plan = (plans.data?.plans ?? []).find((item) => item.plannedDate === iso);
+          const recurrence = (recurring.data ?? []).find((item) => item.date === iso);
           return (
-            <span key={iso} className={`heat__cell heat__cell--l${level}`} title={title}>
-              <span>{Number(iso.slice(8))}</span>
+            <div key={iso} className={`heat__cell heat__cell--l${level}`}>
+              <span className="heat__date">{Number(iso.slice(8))}</span>
               {total > 0 && <span className="heat__amount">฿{formatSatang(total)}</span>}
-            </span>
+              {spend?.topCategoryName && <span className="heat__category">{spend.topCategoryName}</span>}
+              {plan && <Link className="heat__event" to="/plans">Plan</Link>}
+              {recurrence && <Link className="heat__event" to="/settings/recurring">Recurring</Link>}
+            </div>
           );
         })}
       </div>

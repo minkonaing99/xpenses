@@ -14,6 +14,7 @@ export const keys = {
   comparisons: (m: string) => ["comparisons", m] as const,
   dailySpend: (from: string, to: string) => ["dailySpend", from, to] as const,
   upcoming: (days: number) => ["upcoming", days] as const,
+  upcomingRange: (from: string, to: string) => ["upcoming", from, to] as const,
   plans: (month: string) => ["plans", month] as const,
 };
 

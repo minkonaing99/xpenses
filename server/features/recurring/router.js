@@ -9,7 +9,10 @@ const { todayInBangkok } = require('../../cron/dateUtil')
 const { addInterval, planUpcoming } = require('./scheduler')
 const repo = require('./repo')
 
-const upcomingSchema = z.object({ days: z.coerce.number().int().positive().max(365).default(30) })
+const upcomingSchema = z.union([
+  z.object({ days: z.coerce.number().int().positive().max(365).default(30) }),
+  z.object({ from: z.string().date(), to: z.string().date() }).refine(({ from, to }) => from <= to, 'from must be before to'),
+])
 
 function createRecurringRouter(pool) {
   const router = express.Router()
@@ -34,10 +37,11 @@ function createRecurringRouter(pool) {
 
     try {
       const today = todayInBangkok()
-      const horizon = addInterval(today, 'day', parsed.data.days)
+      const from = 'from' in parsed.data ? parsed.data.from : today
+      const horizon = 'to' in parsed.data ? parsed.data.to : addInterval(today, 'day', parsed.data.days)
       const rows = await repo.findAll(pool)
       const rules = rows.filter((row) => row.active === 1).map((row) => ({ ...rowToCamel(row), active: true }))
-      res.json(ok(planUpcoming(rules, today, horizon)))
+      res.json(ok(planUpcoming(rules, from, horizon)))
     } catch (err) {
       next(err)
     }

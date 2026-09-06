@@ -86,6 +86,6 @@ describe("ReportsScreen", () => {
     renderApp(<ReportsScreen />);
 
     expect(await screen.findByText("฿120.00")).toBeInTheDocument();
-    expect(screen.getByTitle(`${currentMonth()}-03: ฿120.00. Highest: Food`)).toBeInTheDocument();
+    expect(screen.getByText("Food", { selector: ".heat__category" })).toBeInTheDocument();
   });
 });

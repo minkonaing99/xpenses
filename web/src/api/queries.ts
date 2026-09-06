@@ -124,6 +124,10 @@ export function useUpcoming(days = 30) {
   });
 }
 
+export function useUpcomingRange(from: string, to: string) {
+  return useQuery({ queryKey: keys.upcomingRange(from, to), queryFn: () => api.get<UpcomingRecurring[]>(`/recurring/upcoming?from=${from}&to=${to}`) });
+}
+
 export function usePlans(month: string) {
   return useQuery({ queryKey: keys.plans(month), queryFn: () => api.get<PlansData>(`/plans?month=${month}`) });
 }

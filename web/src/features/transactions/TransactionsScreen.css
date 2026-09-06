@@ -307,7 +307,7 @@
     top: var(--sp-4);
     padding: var(--sp-5);
     background: var(--paper-raised);
-    border: 1px solid var(--line);
+    border: 0;
     border-radius: var(--r-lg);
     box-shadow: var(--shadow-1);
   }
