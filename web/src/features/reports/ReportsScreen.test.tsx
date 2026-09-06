@@ -85,7 +85,7 @@ describe("ReportsScreen", () => {
   it("shows each day's spend and highest category in the heatmap", async () => {
     renderApp(<ReportsScreen />);
 
-    expect(await screen.findByText("฿120.00")).toBeInTheDocument();
+    expect(await screen.findByText("฿120")).toBeInTheDocument();
     expect(screen.getByText("Food", { selector: ".heat__category" })).toBeInTheDocument();
   });
 });

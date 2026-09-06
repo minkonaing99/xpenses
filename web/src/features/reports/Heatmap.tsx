@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useDailySpend, usePlans, useUpcomingRange } from "../../api/hooks";
 import { useMonth } from "../../app/MonthContext";
-import { formatSatang } from "../../lib/money";
 import "./Heatmap.css";
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];
@@ -58,7 +57,7 @@ export function Heatmap() {
             <div key={iso} className={`heat__cell heat__cell--l${level}`}>
               <span className="heat__date">{Number(iso.slice(8))}</span>
               {(total > 0 || spend?.topCategoryName) && <span className="heat__summary">
-                {total > 0 && <span className="heat__amount">฿{formatSatang(total)}</span>}
+                {total > 0 && <span className="heat__amount">฿{Math.ceil(total / 100).toLocaleString()}</span>}
                 {spend?.topCategoryName && <span className="heat__category">{spend.topCategoryName}</span>}
               </span>}
               {(plan || recurrence) && <span className="heat__events">{plan && <Link className="heat__event" to="/plans">{plan.name}</Link>}{recurrence && <Link className="heat__event" to="/settings/recurring">{recurrence.note ?? "Recurring"}</Link>}</span>}
