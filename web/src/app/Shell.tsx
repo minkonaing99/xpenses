@@ -35,9 +35,9 @@ export function Shell({ children }: { children: ReactNode }) {
           <ReportsIcon />
           <span>Reports</span>
         </NavLink>
-        <NavLink to="/settings" className="tab" aria-label="Settings">
+        <NavLink to="/plans" className="tab" aria-label="Plans">
           <SettingsIcon />
-          <span>Settings</span>
+          <span>Plans</span>
         </NavLink>
       </nav>
 

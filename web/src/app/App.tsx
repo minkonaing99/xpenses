@@ -15,6 +15,7 @@ import { CategoriesScreen } from "../features/categories/CategoriesScreen";
 import { BudgetsScreen } from "../features/budgets/BudgetsScreen";
 import { RecurringScreen } from "../features/recurring/RecurringScreen";
 import { PlansScreen } from "../features/plans/PlansScreen";
+import { ExportScreen } from "../features/settings/ExportScreen";
 import "./App.css";
 
 export function App() {
@@ -43,7 +44,8 @@ export function App() {
             <Route path="/settings/categories" element={<CategoriesScreen />} />
             <Route path="/settings/budgets" element={<BudgetsScreen />} />
             <Route path="/settings/recurring" element={<RecurringScreen />} />
-            <Route path="/settings/plans" element={<PlansScreen />} />
+            <Route path="/plans" element={<PlansScreen />} />
+            <Route path="/settings/export" element={<ExportScreen />} />
             <Route path="*" element={<DashboardScreen />} />
           </Routes>
         </Shell>

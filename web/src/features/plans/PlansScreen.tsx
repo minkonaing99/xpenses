@@ -25,7 +25,7 @@ export function PlansScreen() {
   const busy = confirm.isPending || remove.isPending;
   const monthPlans = (plans.data?.plans ?? []).filter((plan) => plan.plannedDate.startsWith(month)).reduce((total, plan) => total + plan.amount, 0);
   return <div className="plans">
-    <PageHeader title="Plans" back="/settings" action={<Button variant="ghost" onClick={() => { setEditing(null); setOpen(true); }}>Add</Button>} />
+    <PageHeader title="Plans" back="/" action={<Button variant="ghost" onClick={() => { setEditing(null); setOpen(true); }}>Add</Button>} />
     <section className="plans__forecast">
       <h2>Forecast after plans</h2>
       {(plans.data?.accounts ?? []).map((account) => <div className="plans__account" key={account.id}>

@@ -1,4 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import {
   useAccounts,
   useAnomalies,
@@ -15,12 +16,10 @@ import { dayLabel } from "../../lib/format";
 import { categoryColor } from "../../lib/categoryColor";
 import { useEntrance } from "../../lib/useEntrance";
 import { AnimatedMoney } from "../../ui/AnimatedMoney";
-import { LogoMark } from "../../ui/Logo";
 import { Money } from "../../ui/Money";
 import { MonthSwitcher } from "../../ui/MonthSwitcher";
 import { Sparkline } from "../../ui/Sparkline";
-import { DashboardCustomizer } from "./DashboardCustomizer";
-import { loadDashboardPreferences, saveDashboardPreferences } from "./dashboardPreferences";
+import { loadDashboardPreferences } from "./dashboardPreferences";
 import "./DashboardScreen.css";
 
 function greeting(now = new Date()): string {
@@ -55,13 +54,8 @@ export function DashboardScreen() {
 
   const stageRef = useEntrance<HTMLDivElement>();
   const [shown, setShown] = useState(balanceVisibleThisSession);
-  const [customizing, setCustomizing] = useState(false);
-  const [preferences, setPreferences] = useState(loadDashboardPreferences);
+  const [preferences] = useState(loadDashboardPreferences);
 
-  function updatePreferences(next: typeof preferences) {
-    setPreferences(next);
-    saveDashboardPreferences(next);
-  }
   const groups: Record<typeof preferences.order[number], ReactNode> = {
     upcoming: preferences.visible.upcoming && upcoming.data && upcoming.data.length > 0 ? <Card title="Upcoming">
       {upcoming.data.map((u) => <UpcomingRow key={`${u.id}-${u.date}`} u={u} name={catName.get(u.categoryId ?? "")} />)}
@@ -88,10 +82,7 @@ export function DashboardScreen() {
           <p className="dash__hi">{greeting()}</p>
           <h1 className="dash__greet">Your overview</h1>
         </div>
-        <span className="dash__logo">
-          <LogoMark size={26} />
-        </span>
-        <button className="dash__customize" onClick={() => setCustomizing(true)}>Customize</button>
+        <Link className="dash__customize" to="/settings">Settings</Link>
       </header>
 
       <section className="hero">
@@ -137,7 +128,6 @@ export function DashboardScreen() {
         className={`dash__group${group === "accountsBudgets" ? " dash__group--paired" : ""}`}>
         {groups[group]}
       </div>)}
-      <DashboardCustomizer open={customizing} value={preferences} onChange={updatePreferences} onClose={() => setCustomizing(false)} />
     </div>
   );
 }

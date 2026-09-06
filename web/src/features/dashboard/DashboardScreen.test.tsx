@@ -85,17 +85,8 @@ describe("DashboardScreen", () => {
     expect(screen.queryByText(/85% through its budget/)).not.toBeInTheDocument();
   });
 
-  it("opens customization and persists a visibility change", async () => {
-    let saved = "";
-    vi.stubGlobal("localStorage", {
-      getItem: () => null,
-      setItem: (_key: string, value: string) => { saved = value; },
-    });
+  it("links Home to Settings", async () => {
     renderApp(<DashboardScreen />);
-    fireEvent.click(await screen.findByRole("button", { name: "Customize" }));
-    expect(screen.getByRole("dialog", { name: "Customize dashboard" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("checkbox", { name: "Accounts" }));
-    expect(saved).toContain('"accounts":false');
-    fireEvent.click(screen.getAllByRole("button", { name: "Close" })[1]);
+    expect(await screen.findByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
   });
 });
