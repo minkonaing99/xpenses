@@ -67,6 +67,25 @@ export interface DailySpend {
   topCategoryName?: string;
 }
 
+export interface PlannedPurchase {
+  id: string;
+  name: string;
+  amount: number;
+  accountId: string;
+  categoryId: string;
+  plannedDate: string;
+  waitDays: number;
+  waitUntil: string;
+  status: "planned" | "confirmed";
+  confirmedTransactionId?: string | null;
+}
+
+export interface PlansData {
+  plans: PlannedPurchase[];
+  accounts: (Account & { planned: number; forecastBalance: number })[];
+  budgets: (BudgetStatus & { planned: number; forecastSpent: number; overForecast: boolean })[];
+}
+
 // A recurring rule projected onto a concrete upcoming date.
 export type UpcomingRecurring = RecurringRule & { date: string };
 

@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
 import { mk, PERSISTED_QUERY_KEY } from "../app/queryClient";
 import type { Account, Category, RecurringRule, Transaction } from "./types";
+import type { PlannedPurchase } from "./types";
 
 /* auth — online-only, never queued offline */
 export function useLogout() {
@@ -86,3 +87,12 @@ export function useUpdateRecurring() {
 export function useDeleteRecurring() {
   return useMutation<unknown, Error, string>({ mutationKey: mk.recurringDelete });
 }
+
+export function useCreatePlan() {
+  return useMutation<unknown, Error, Pick<PlannedPurchase, "id" | "name" | "amount" | "accountId" | "categoryId" | "plannedDate" | "waitDays">>({ mutationKey: mk.planCreate });
+}
+export function useUpdatePlan() {
+  return useMutation<unknown, Error, { id: string; patch: Partial<PlannedPurchase> }>({ mutationKey: mk.planUpdate });
+}
+export function useDeletePlan() { return useMutation<unknown, Error, string>({ mutationKey: mk.planDelete }); }
+export function useConfirmPlan() { return useMutation<unknown, Error, string>({ mutationKey: mk.planConfirm }); }

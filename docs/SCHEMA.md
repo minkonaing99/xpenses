@@ -103,6 +103,13 @@ Index: `idx_rule_due (active, next_run_date)`.
 The (rule_id, run_date) PK guarantees a due rule inserts at most one txn per
 date even if the cron fires twice.
 
+### planned_purchases
+One-time future expenses. Active plans reserve their amount in account
+forecasts; plans in selected month also reserve category budget forecasts.
+They never appear in Ledger or Reports until confirmed. Confirmation creates
+one expense transaction and links it to the plan. Deleting an active plan is
+permanent.
+
 ## Relationships (ERD-style)
 - Account has many Transactions (as account_id, from_account_id, to_account_id).
 - Category has many Transactions (as category_id).
@@ -276,6 +283,15 @@ Transaction body:
 | POST   | /api/recurring | rule template + `{ intervalUnit, intervalCount, nextRunDate }` | Yes | |
 | PATCH  | /api/recurring/:id | partial (incl. `active`) | Yes | Pause/resume. Resuming an overdue rule preserves cadence, skips missed runs, and advances `nextRunDate` to the first scheduled date on or after Bangkok today. |
 | DELETE | /api/recurring/:id | — | Yes | Soft delete. |
+
+### Plans
+| Method | Path | Body / Query | Auth Required | Notes |
+|---|---|---|---|---|
+| GET | /api/plans | `?month=YYYY-MM` | Yes | Active plans plus account and budget forecasts. |
+| POST | /api/plans | `{ id, name, amount, accountId, categoryId, plannedDate, waitDays }` | Yes | `waitDays` 0-30, default 7. Planned date moves to end of wait if needed. |
+| PATCH | /api/plans/:id | partial fields | Yes | Increasing price restarts waiting period. |
+| DELETE | /api/plans/:id | — | Yes | Permanently deletes active plan. |
+| POST | /api/plans/:id/confirm | — | Yes | After wait ends, creates linked expense dated today. |
 
 ### Reports
 | Method | Path | Query | Auth Required | Notes |

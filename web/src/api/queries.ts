@@ -15,6 +15,7 @@ import type {
   Transaction,
   TxnType,
   UpcomingRecurring,
+  PlansData,
 } from "./types";
 
 export function useMe() {
@@ -121,6 +122,10 @@ export function useUpcoming(days = 30) {
     queryKey: keys.upcoming(days),
     queryFn: () => api.get<UpcomingRecurring[]>(`/recurring/upcoming?days=${days}`),
   });
+}
+
+export function usePlans(month: string) {
+  return useQuery({ queryKey: keys.plans(month), queryFn: () => api.get<PlansData>(`/plans?month=${month}`) });
 }
 
 /** Latest transactions across all months — powers quick-add "repeat" templates. */

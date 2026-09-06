@@ -93,12 +93,11 @@ async function findAllForSync(pool) {
 }
 
 async function countReferences(pool, id) {
-  const [rows] = await pool.query(
-    `SELECT COUNT(*) AS count FROM transactions
-     WHERE deleted_at IS NULL AND (account_id = ? OR from_account_id = ? OR to_account_id = ?)`,
-    [id, id, id],
-  )
-  return rows[0].count
+  const [[txnRows], [planRows]] = await Promise.all([
+    pool.query(`SELECT COUNT(*) AS count FROM transactions WHERE deleted_at IS NULL AND (account_id = ? OR from_account_id = ? OR to_account_id = ?)`, [id, id, id]),
+    pool.query("SELECT COUNT(*) AS count FROM planned_purchases WHERE status = 'planned' AND account_id = ?", [id]),
+  ])
+  return txnRows[0].count + planRows[0].count
 }
 
 module.exports = {

@@ -24,6 +24,10 @@ export const mk = {
   recurringCreate: ["recurring", "create"] as const,
   recurringUpdate: ["recurring", "update"] as const,
   recurringDelete: ["recurring", "delete"] as const,
+  planCreate: ["plan", "create"] as const,
+  planUpdate: ["plan", "update"] as const,
+  planDelete: ["plan", "delete"] as const,
+  planConfirm: ["plan", "confirm"] as const,
 };
 
 type IdPatch<T> = { id: string; patch: Partial<T> };
@@ -70,6 +74,10 @@ export function registerMutationDefaults(qc: QueryClient): void {
   );
   def<IdPatch<RecurringRule>>(mk.recurringUpdate, (v) => api.patch(`/recurring/${v.id}`, v.patch));
   def<string>(mk.recurringDelete, (id) => api.del(`/recurring/${id}`));
+  def<Pick<import("../api/types").PlannedPurchase, "id" | "name" | "amount" | "accountId" | "categoryId" | "plannedDate" | "waitDays">>(mk.planCreate, (p) => api.post("/plans", p));
+  def<{ id: string; patch: Partial<import("../api/types").PlannedPurchase> }>(mk.planUpdate, (v) => api.patch(`/plans/${v.id}`, v.patch));
+  def<string>(mk.planDelete, (id) => api.del(`/plans/${id}`));
+  def<string>(mk.planConfirm, (id) => api.post(`/plans/${id}/confirm`, {}));
 }
 
 export function makeQueryClient(): QueryClient {

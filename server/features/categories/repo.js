@@ -59,11 +59,12 @@ async function softDelete(pool, id) {
 }
 
 async function countReferences(pool, id) {
-  const [[txnRows], [budgetRows]] = await Promise.all([
+  const [[txnRows], [budgetRows], [planRows]] = await Promise.all([
     pool.query('SELECT COUNT(*) AS count FROM transactions WHERE deleted_at IS NULL AND category_id = ?', [id]),
     pool.query('SELECT COUNT(*) AS count FROM budgets WHERE deleted_at IS NULL AND category_id = ?', [id]),
+    pool.query("SELECT COUNT(*) AS count FROM planned_purchases WHERE status = 'planned' AND category_id = ?", [id]),
   ])
-  return txnRows[0].count + budgetRows[0].count
+  return txnRows[0].count + budgetRows[0].count + planRows[0].count
 }
 
 // Includes soft-deleted rows (tombstones) — see docs/TECH.md §6 pull sync.

@@ -19,6 +19,7 @@ const MANAGE = [
   { to: "/settings/categories", label: "Categories", desc: "How expenses are grouped" },
   { to: "/settings/budgets", label: "Budgets", desc: "Monthly limits per category" },
   { to: "/settings/recurring", label: "Recurring", desc: "Auto-inserted transactions" },
+  { to: "/settings/plans", label: "Plans", desc: "Future purchases and waiting periods" },
 ];
 
 const THEMES: { value: Theme; label: string }[] = [
