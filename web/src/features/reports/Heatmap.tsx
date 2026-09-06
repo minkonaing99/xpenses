@@ -27,9 +27,7 @@ export function Heatmap() {
   const q = useDailySpend(from, to);
 
   const byDate = useMemo(() => {
-    const map = new Map<string, number>();
-    (q.data ?? []).forEach((d) => map.set(d.date, d.total));
-    return map;
+    return new Map((q.data ?? []).map((d) => [d.date, d]));
   }, [q.data]);
 
   const max = Math.max(1, ...(q.data ?? []).map((d) => d.total));
@@ -48,11 +46,14 @@ export function Heatmap() {
           <span key={`b${i}`} className="heat__cell heat__cell--blank" aria-hidden="true" />
         ))}
         {days.map((iso) => {
-          const total = byDate.get(iso) ?? 0;
+          const spend = byDate.get(iso);
+          const total = spend?.total ?? 0;
           const level = total === 0 ? 0 : Math.min(4, Math.ceil((total / max) * 4));
+          const title = `${iso}: ฿${formatSatang(total)}${spend?.topCategoryName ? `. Highest: ${spend.topCategoryName}` : ""}`;
           return (
-            <span key={iso} className={`heat__cell heat__cell--l${level}`} title={`${iso}: ฿${formatSatang(total)}`}>
-              {Number(iso.slice(8))}
+            <span key={iso} className={`heat__cell heat__cell--l${level}`} title={title}>
+              <span>{Number(iso.slice(8))}</span>
+              {total > 0 && <span className="heat__amount">฿{formatSatang(total)}</span>}
             </span>
           );
         })}

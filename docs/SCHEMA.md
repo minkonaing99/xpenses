@@ -282,7 +282,7 @@ Transaction body:
 |---|---|---|---|---|
 | GET | /api/reports/category-spend | `?month=YYYY-MM` | Yes | `[{ categoryId, name, total }]` for the chart. |
 | GET | /api/reports/summary | `?month=YYYY-MM` | Yes | `{ accounts:[{id,name,type,balance}], monthIncome, monthExpense, monthNet }` (satang). |
-| GET | /api/reports/daily-spend | `?from=YYYY-MM-DD&to=YYYY-MM-DD` | Yes | `[{ date, total }]` expense-only spend per day over the inclusive range. Feeds the calendar heatmap. Satang. |
+| GET | /api/reports/daily-spend | `?from=YYYY-MM-DD&to=YYYY-MM-DD` | Yes | `[{ date, total, topCategoryName }]` expense-only spend per day over the inclusive range. `topCategoryName` is the highest-spend category that day. Feeds the calendar heatmap. Satang. |
 | GET | /api/reports/export | `?month=YYYY-MM` \| `?from=&to=` `&format=csv\|json` | Yes | Attachment of transactions. `month` **or** `from`+`to` (inclusive) required; `format` defaults `csv`. Columns/keys: `date,type,category,account,amount_thb,note`. Amount in baht (2dp). |
 
 ### Cron (Plan B, optional)

@@ -42,11 +42,21 @@ async function monthTransactions(pool, month) {
 // the calendar heatmap. txn_date is a DATE, returned as a 'YYYY-MM-DD' string.
 async function dailySpend(pool, from, to) {
   const [rows] = await pool.query(
-    `SELECT t.txn_date, SUM(t.amount) AS total
-     FROM transactions t
-     WHERE t.type = 'expense' AND t.deleted_at IS NULL AND t.txn_date >= ? AND t.txn_date <= ?
-     GROUP BY t.txn_date
-     ORDER BY t.txn_date ASC`,
+    `SELECT d.txn_date, d.total,
+            (SELECT c.name
+             FROM transactions t
+             JOIN categories c ON c.id = t.category_id
+             WHERE t.type = 'expense' AND t.deleted_at IS NULL AND t.txn_date = d.txn_date
+             GROUP BY t.category_id, c.name
+             ORDER BY SUM(t.amount) DESC, c.name ASC
+             LIMIT 1) AS top_category_name
+     FROM (
+       SELECT txn_date, SUM(amount) AS total
+       FROM transactions
+       WHERE type = 'expense' AND deleted_at IS NULL AND txn_date >= ? AND txn_date <= ?
+       GROUP BY txn_date
+     ) d
+     ORDER BY d.txn_date ASC`,
     [from, to],
   )
   return rows

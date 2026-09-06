@@ -28,12 +28,14 @@ describe('reports router', () => {
   let app
   let accountId
   let categoryId
+  let categoryIds
   let txnIds
 
   beforeEach(async () => {
     app = buildApp()
     accountId = randomUUID()
     categoryId = randomUUID()
+    categoryIds = [categoryId]
     txnIds = []
     await accountsRepo.create(pool, { id: accountId, name: 'Reports Router Account' })
     await categoriesRepo.create(pool, { id: categoryId, name: `Reports Router Category ${categoryId}` })
@@ -44,7 +46,9 @@ describe('reports router', () => {
       await pool.query('DELETE FROM transactions WHERE id = ?', [id])
     }
     await pool.query('DELETE FROM accounts WHERE id = ?', [accountId])
-    await pool.query('DELETE FROM categories WHERE id = ?', [categoryId])
+    for (const id of categoryIds) {
+      await pool.query('DELETE FROM categories WHERE id = ?', [id])
+    }
   })
 
   async function makeTxn(type, amount, txnDate, extra = {}) {
@@ -134,5 +138,19 @@ describe('reports router', () => {
     const res = await request(app).get('/api/reports/daily-spend').query({ from: '2026-07-01', to: '2026-07-31' })
     expect(res.status).toBe(200)
     expect(res.body.data.some((d) => d.total === 6420)).toBe(true)
+  })
+
+  it('GET /daily-spend includes each day\'s highest-spend category', async () => {
+    const otherCategoryId = randomUUID()
+    categoryIds.push(otherCategoryId)
+    await categoriesRepo.create(pool, { id: otherCategoryId, name: `Other Reports Category ${otherCategoryId}` })
+    await makeTxn('expense', 4200, '2026-07-05')
+    await makeTxn('expense', 6500, '2026-07-05', { categoryId: otherCategoryId })
+    await makeTxn('income', 9900, '2026-07-05')
+
+    const res = await request(app).get('/api/reports/daily-spend').query({ from: '2026-07-01', to: '2026-07-31' })
+    const row = res.body.data.find((d) => d.date === '2026-07-05')
+
+    expect(row).toMatchObject({ total: 10700, topCategoryName: `Other Reports Category ${otherCategoryId}` })
   })
 })

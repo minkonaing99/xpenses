@@ -64,6 +64,7 @@ export interface CategorySpend {
 export interface DailySpend {
   date: string; // YYYY-MM-DD
   total: number; // satang, expense-only
+  topCategoryName?: string;
 }
 
 // A recurring rule projected onto a concrete upcoming date.

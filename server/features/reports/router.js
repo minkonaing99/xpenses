@@ -84,7 +84,11 @@ function createReportsRouter(pool) {
 
     try {
       const rows = await repo.dailySpend(pool, parsed.data.from, parsed.data.to)
-      res.json(ok(rows.map((row) => ({ date: row.txn_date, total: Number(row.total) }))))
+      res.json(ok(rows.map((row) => ({
+        date: row.txn_date,
+        total: Number(row.total),
+        topCategoryName: row.top_category_name,
+      }))))
     } catch (err) {
       next(err)
     }

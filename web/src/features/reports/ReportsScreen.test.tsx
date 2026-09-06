@@ -11,6 +11,7 @@ import { api } from "../../lib/api";
 import { ReportsScreen } from "./ReportsScreen";
 import { fakeGet, renderApp } from "../../test/utils";
 import { money } from "../../test/money";
+import { currentMonth } from "../../lib/format";
 
 const summary = {
   accounts: [{ id: "a1", name: "Cash", type: "cash", balance: 12000 }],
@@ -31,6 +32,7 @@ const comparisons = [
     trend: 1,
   },
 ];
+const dailySpend = [{ date: `${currentMonth()}-03`, total: 12000, topCategoryName: "Food" }];
 
 beforeEach(() => {
   vi.mocked(api.get).mockImplementation(
@@ -38,6 +40,7 @@ beforeEach(() => {
       "/reports/summary": summary,
       "/reports/category-spend": spend,
       "/insights/comparisons": comparisons,
+      "/reports/daily-spend": dailySpend,
     }) as never,
   );
 });
@@ -77,5 +80,12 @@ describe("ReportsScreen", () => {
     fireEvent.click(controls[0]);
     expect(screen.getByLabelText("Current route")).toHaveTextContent("/ledger?month=");
     expect(screen.getByLabelText("Current route")).toHaveTextContent("categoryId=c1");
+  });
+
+  it("shows each day's spend and highest category in the heatmap", async () => {
+    renderApp(<ReportsScreen />);
+
+    expect(await screen.findByText("฿120.00")).toBeInTheDocument();
+    expect(screen.getByTitle(`${currentMonth()}-03: ฿120.00. Highest: Food`)).toBeInTheDocument();
   });
 });
