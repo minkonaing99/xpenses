@@ -58,8 +58,8 @@ export function SettingsScreen() {
             <Chevron />
           </Link>
         ))}
+        <button className="srow settings__customize" onClick={() => setCustomizing(true)}><span className="srow__text"><span className="srow__label">Customize Home</span><span className="srow__desc">Choose dashboard sections</span></span><Chevron /></button>
       </nav>
-      <button className="srow settings__customize" onClick={() => setCustomizing(true)}><span className="srow__text"><span className="srow__label">Customize Home</span><span className="srow__desc">Choose dashboard sections</span></span><Chevron /></button>
 
       <section className="appearance" aria-label="Appearance">
         <h2 className="settings__section-title">Appearance</h2>

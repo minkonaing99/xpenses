@@ -57,8 +57,10 @@ export function Heatmap() {
           return (
             <div key={iso} className={`heat__cell heat__cell--l${level}`}>
               <span className="heat__date">{Number(iso.slice(8))}</span>
-              {total > 0 && <span className="heat__amount">฿{formatSatang(total)}</span>}
-              {spend?.topCategoryName && <span className="heat__category">{spend.topCategoryName}</span>}
+              {(total > 0 || spend?.topCategoryName) && <span className="heat__summary">
+                {total > 0 && <span className="heat__amount">฿{formatSatang(total)}</span>}
+                {spend?.topCategoryName && <span className="heat__category">{spend.topCategoryName}</span>}
+              </span>}
               {plan && <Link className="heat__event" to="/plans">Plan</Link>}
               {recurrence && <Link className="heat__event" to="/settings/recurring">Recurring</Link>}
             </div>

@@ -6,12 +6,16 @@
 }
 
 .dash__top {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
 .dash__customize {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   min-height: 2.75rem;
   padding: 0 var(--sp-3);
   color: var(--accent);
