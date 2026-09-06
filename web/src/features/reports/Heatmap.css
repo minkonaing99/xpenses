@@ -26,12 +26,13 @@
 }
 
 .heat__amount {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
-.heat__date { font-weight: 700; }
-.heat__category, .heat__event { overflow: hidden; max-width: 100%; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.heat__date { align-self: flex-start; font-size: 13px; font-weight: 700; }
+.heat__amount, .heat__category { align-self: center; }
+.heat__category, .heat__event { overflow: hidden; max-width: 100%; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .heat__event { color: inherit; text-decoration: underline; }
 
 .heat__cell--blank {
