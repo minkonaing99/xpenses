@@ -31,6 +31,11 @@ async function findByIdAny(pool, id) {
   return rows[0] || null
 }
 
+async function findByIdAnyForUpdate(connection, id) {
+  const [rows] = await connection.query('SELECT * FROM transactions WHERE id = ? FOR UPDATE', [id])
+  return rows[0] || null
+}
+
 async function findAll(pool, { month, type, accountId, categoryId, limit, cursor } = {}) {
   const conditions = ['deleted_at IS NULL']
   const params = []
@@ -179,6 +184,7 @@ async function findChangedSince(pool, since) {
 module.exports = {
   findById,
   findByIdAny,
+  findByIdAnyForUpdate,
   findAll,
   create,
   update,

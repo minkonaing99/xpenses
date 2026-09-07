@@ -26,20 +26,27 @@ afterAll(async () => {
 describe('transactions router', () => {
   let app
   let accountId
+  let otherAccountId
   let categoryId
   let txnId
+  let bulkTxnIds
 
   beforeEach(async () => {
     app = buildApp()
     accountId = randomUUID()
+    otherAccountId = randomUUID()
     categoryId = randomUUID()
     txnId = randomUUID()
+    bulkTxnIds = []
     await accountsRepo.create(pool, { id: accountId, name: 'Router Test Account' })
+    await accountsRepo.create(pool, { id: otherAccountId, name: 'Router Test Savings' })
     await categoriesRepo.create(pool, { id: categoryId, name: `Router Test Category ${categoryId}` })
   })
 
   afterEach(async () => {
+    if (bulkTxnIds.length > 0) await pool.query('DELETE FROM transactions WHERE id IN (?)', [bulkTxnIds])
     await pool.query('DELETE FROM transactions WHERE id = ?', [txnId])
+    await pool.query('DELETE FROM accounts WHERE id = ?', [otherAccountId])
     await pool.query('DELETE FROM accounts WHERE id = ?', [accountId])
     await pool.query('DELETE FROM categories WHERE id = ?', [categoryId])
   })
@@ -62,6 +69,55 @@ describe('transactions router', () => {
     const getRes = await request(app).get(`/api/transactions/${txnId}`)
     expect(getRes.status).toBe(200)
     expect(getRes.body.data).toMatchObject({ amount: 8600, type: 'expense' })
+  })
+
+  it('POST /bulk atomically creates mixed transaction types in input order', async () => {
+    bulkTxnIds = [randomUUID(), randomUUID(), randomUUID()]
+    const updatedAt = '2026-07-10T09:00:00.000Z'
+    const transactions = [
+      { ...validExpense(), id: bulkTxnIds[0] },
+      { id: bulkTxnIds[1], type: 'income', amount: 20000, accountId: otherAccountId, txnDate: '2026-07-10', updatedAt },
+      { id: bulkTxnIds[2], type: 'transfer', amount: 5000, fromAccountId: accountId, toAccountId: otherAccountId, txnDate: '2026-07-10', updatedAt },
+    ]
+    const res = await request(app).post('/api/transactions/bulk').send({ transactions })
+
+    expect(res.status).toBe(201)
+    expect(res.body.data.results.map((result) => result.id)).toEqual(bulkTxnIds)
+    const [rows] = await pool.query('SELECT id, type FROM transactions WHERE id IN (?) ORDER BY FIELD(id, ?, ?, ?)', [bulkTxnIds, ...bulkTxnIds])
+    expect(rows.map((row) => row.type)).toEqual(['expense', 'income', 'transfer'])
+
+    const replay = await request(app).post('/api/transactions/bulk').send({ transactions })
+    expect(replay.status).toBe(200)
+
+    const conflicting = await request(app).post('/api/transactions/bulk').send({
+      transactions: [{ ...transactions[0], note: 'Different expense' }],
+    })
+    expect(conflicting.status).toBe(409)
+    const stored = await request(app).get(`/api/transactions/${bulkTxnIds[0]}`)
+    expect(stored.body.data.note).toBe('groceries')
+  })
+
+  it('POST /bulk rolls back every item when a later transaction fails', async () => {
+    bulkTxnIds = [randomUUID(), randomUUID()]
+    const res = await request(app).post('/api/transactions/bulk').send({ transactions: [
+      { ...validExpense(), id: bulkTxnIds[0] },
+      { id: bulkTxnIds[1], type: 'transfer', amount: 20000, fromAccountId: accountId, toAccountId: accountId, txnDate: '2026-07-10', updatedAt: '2026-07-10T09:00:00.000Z' },
+    ] })
+
+    expect(res.status).toBe(400)
+    const [rows] = await pool.query('SELECT id FROM transactions WHERE id IN (?)', [bulkTxnIds])
+    expect(rows).toHaveLength(0)
+  })
+
+  it('POST /bulk rejects more than 20 transactions', async () => {
+    bulkTxnIds = Array.from({ length: 21 }, () => randomUUID())
+    const transactions = bulkTxnIds.map((id) => ({ ...validExpense(), id }))
+
+    const res = await request(app).post('/api/transactions/bulk').send({ transactions })
+
+    expect(res.status).toBe(400)
+    const [rows] = await pool.query('SELECT id FROM transactions WHERE id IN (?)', [bulkTxnIds])
+    expect(rows).toHaveLength(0)
   })
 
   it('POST rejects amount <= 0 with 400 VALIDATION_ERROR', async () => {

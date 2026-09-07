@@ -68,6 +68,29 @@ describe('plans router purchase reflections', () => {
     await pool.query('DELETE FROM accounts WHERE id = ?', [accountId])
   })
 
+  it('replays the same plan id without creating a duplicate', async () => {
+    const body = {
+      id: planId,
+      name: 'Headphones',
+      amount: 3000,
+      accountId,
+      categoryId,
+      plannedDate: todayInBangkok(),
+      waitDays: 0,
+    }
+
+    await request(app).post('/api/plans').send(body).expect(201)
+    const replay = await request(app).post('/api/plans').send(body)
+
+    expect(replay.status).toBe(200)
+    expect(replay.body.data).toMatchObject({ id: planId, name: 'Headphones' })
+    const [rows] = await pool.query('SELECT id FROM planned_purchases WHERE id = ?', [planId])
+    expect(rows).toHaveLength(1)
+
+    const reused = await request(app).post('/api/plans').send({ ...body, name: 'Different plan' })
+    expect(reused.status).toBe(409)
+  })
+
   it('saves reflection on confirmed purchase and returns it in purchase history', async () => {
     const today = await createConfirmedPlan()
 

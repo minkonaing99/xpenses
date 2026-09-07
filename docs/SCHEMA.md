@@ -239,6 +239,7 @@ Codes: `VALIDATION_ERROR`(400) `UNAUTHORIZED`(401) `NOT_FOUND`(404)
 | GET    | /api/transactions | `?month=YYYY-MM&type=&accountId=&categoryId=&limit=&cursor=` | Yes | Filtered, paginated, excludes deleted. |
 | GET    | /api/transactions/:id | — | Yes | Single. |
 | POST   | /api/transactions | full txn (see below) | Yes | Idempotent upsert on `id`. |
+| POST   | /api/transactions/bulk | `{ transactions: [...] }` (1-20 full txns) | Yes | Atomic ordered, create-only batch. Identical IDs replay; conflicting reuse returns 409; any failure rolls back all items. |
 | PATCH  | /api/transactions/:id | partial + `updatedAt` | Yes | LWW. |
 | DELETE | /api/transactions/:id | `{ updatedAt }` | Yes | Soft delete (LWW). |
 
@@ -291,7 +292,7 @@ Transaction body:
 | Method | Path | Body / Query | Auth Required | Notes |
 |---|---|---|---|---|
 | GET | /api/plans | `?month=YYYY-MM` | Yes | Active plans, confirmed purchase history, and account/budget forecasts. |
-| POST | /api/plans | `{ id, name, amount, accountId, categoryId, plannedDate, waitDays }` | Yes | `waitDays` 0-30, default 7. Planned date moves to end of wait if needed. |
+| POST | /api/plans | `{ id, name, amount, accountId, categoryId, plannedDate, waitDays }` | Yes | Idempotent on `id`; conflicting reuse returns 409. `waitDays` 0-30, default 7. Planned date moves to end of wait if needed. |
 | PATCH | /api/plans/:id | active plan fields, or `{ reflection, reflectionNote? }` for a confirmed purchase | Yes | Increasing an active plan price restarts its waiting period. Reflection updates never change its transaction. |
 | DELETE | /api/plans/:id | — | Yes | Permanently deletes active plan. |
 | POST | /api/plans/:id/confirm | — | Yes | After wait ends, creates linked expense dated today. |

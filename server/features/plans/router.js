@@ -41,6 +41,11 @@ function normalizePlan(plan, today, resetWait) {
   return { ...plan, waitUntil, plannedDate: maxDate(plan.plannedDate, waitUntil) }
 }
 
+function sameCreatedPlan(current, candidate) {
+  return ['name', 'amount', 'accountId', 'categoryId', 'plannedDate', 'waitDays']
+    .every((field) => current[field] === candidate[field])
+}
+
 function createPlansRouter(pool) {
   const router = express.Router()
   router.get('/', async (req, res, next) => {
@@ -56,8 +61,14 @@ function createPlansRouter(pool) {
     const parsed = planSchema.safeParse(req.body)
     if (!parsed.success) return next(new ApiError('VALIDATION_ERROR', parsed.error.issues[0].message))
     try {
-      await assertRefs(pool, parsed.data)
       const plan = normalizePlan(parsed.data, todayInBangkok(), true)
+      const existing = await repo.findById(pool, plan.id)
+      if (existing) {
+        const current = mapPlan(existing)
+        if (!sameCreatedPlan(current, plan)) throw new ApiError('CONFLICT', 'plan id already used for different data')
+        return res.json(ok(current))
+      }
+      await assertRefs(pool, plan)
       res.status(201).json(ok(mapPlan(await repo.create(pool, plan))))
     } catch (err) { next(err) }
   })

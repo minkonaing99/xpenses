@@ -1,9 +1,9 @@
 {
   "name": "xpenses-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "MCP server exposing the xpenses API to Claude (read + create-expense).",
+  "description": "MCP server exposing xpenses reads and safe transaction and plan creation.",
   "bin": {
     "xpenses-mcp": "src/index.mjs"
   },

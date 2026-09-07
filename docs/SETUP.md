@@ -148,9 +148,9 @@ Format: [Keep a Changelog](https://keepachangelog.com)
     endpoint remains for API and MCP clients, but its Dashboard card was removed.
   - Tests: +30 server (service pure math, repo SQL, router), +3 web.
 - **MCP server (Phase 9)** — `mcp/` package (stdio, `@modelcontextprotocol/sdk`)
-  exposing finances to Claude Desktop / Claude Code. Read tools (transactions,
-  balances, budgets, forecast, anomalies, comparisons) + one write
-  (`create_expense`, baht->satang, category/account matched by name). Auth via a
+  exposing finances to Claude Desktop / Claude Code. Ten tools cover reads,
+  atomic bulk expense/income/transfer creation, and plan listing/creation.
+  Mutations remain create-only. Auth via a
   new optional `API_TOKEN` env: `middleware/auth.js` now accepts a constant-time
   `Authorization: Bearer <token>` alongside the JWT cookie; `config/env.js`
   enforces a 24-char floor. Setup in `docs/MCP.md`. Self-check: `mcp/test.mjs`.

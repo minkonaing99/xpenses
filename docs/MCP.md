@@ -6,10 +6,11 @@ xpenses REST API over HTTPS with a bearer token.
 
 ## What Claude can do
 
-Read: `list_transactions`, `get_balances`, `get_budgets`, `get_forecast`,
-`get_anomalies`, `get_comparisons`. Write: `create_expense` only (amount in
-baht, category/account matched by name). No update or delete by design — fix
-mistakes in the app.
+The server exposes 10 tools. Read: `list_transactions`, `get_balances`,
+`get_budgets`, `get_forecast`, `get_anomalies`, `get_comparisons`, and
+`get_plans`. Create: `create_expense`, `create_transactions`, and `create_plan`.
+No update, delete, plan confirmation, or reflection tools by design. Fix
+mistakes and confirm purchases in the app.
 
 ## Usage (talking to it)
 
@@ -25,6 +26,9 @@ name — just talk. Claude reads the request and picks the tool. Examples:
 | "what am I spending more on vs last month?" | `get_comparisons` |
 | "list my July transactions" | `list_transactions` |
 | "log ฿120 lunch to Cash under Food" | `create_expense` |
+| "log lunch, salary, and a transfer" | `create_transactions` |
+| "show my September purchase plans" | `get_plans` |
+| "plan a ฿30,000 laptop for October" | `create_plan` |
 
 Notes:
 - **Months** default to the current one; name another ("in June", "2026-05").
@@ -33,8 +37,16 @@ Notes:
 - **Logging an expense**: amount in baht (auto-converted to satang); category
   and account are matched by name (exact first, then partial); date defaults to
   today (Bangkok), or say "...on 2026-07-09".
-- **Read + add-expense only.** No edit or delete through Claude — do those in
-  the app. A model misread can't overwrite or wipe data.
+- **Safe retries:** every create tool requires a `request_id` UUID. Generate it
+  once and reuse the same value if the call is retried; the API will not create
+  duplicates for that request.
+- **Bulk logging:** `create_transactions` accepts 1-20 mixed expenses, incomes,
+  and transfers. It validates every item and commits them atomically, so one
+  failure rolls back the whole batch.
+- **Plans:** plans can be listed and created. Confirming, editing, deleting,
+  and purchase reflections remain app-only.
+- **Create-only writes.** No edit or delete through Claude. A model misread
+  cannot overwrite or wipe existing data.
 - If it logs to the wrong category/account, restate the exact name.
 
 Troubleshooting: tools missing -> restart the client and approve the server;
@@ -87,8 +99,8 @@ the server refuses to start without them.
   falls through to cookie auth and then 401.
 - The token grants the same access as a logged-in session — treat it like a
   password. Rotate by changing `API_TOKEN` on the server and the client config.
-- `create_expense` is the only mutation exposed; a misread by the model cannot
-  delete or overwrite existing data.
+- MCP writes can only create transactions and plans; they cannot delete,
+  overwrite, confirm purchases, or save reflections.
 
 ## Self-check
 
