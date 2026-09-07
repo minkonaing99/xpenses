@@ -108,7 +108,8 @@ One-time future expenses. Active plans reserve their amount in account
 forecasts; plans in selected month also reserve category budget forecasts.
 They never appear in Ledger or Reports until confirmed. Confirmation creates
 one expense transaction and links it to the plan. Deleting an active plan is
-permanent.
+permanent. Confirmed plans remain available as purchase history and may store
+one editable reflection rating and optional note.
 
 ## Relationships (ERD-style)
 - Account has many Transactions (as account_id, from_account_id, to_account_id).
@@ -121,6 +122,7 @@ permanent.
 - `transactions.type` / `recurring_rules.type`: `expense`, `income`, `transfer`.
 - `accounts.type`: `cash`, `bank`, `other`.
 - `recurring_rules.interval_unit`: `day`, `week`, `month`.
+- `planned_purchases.reflection`: `worth_it`, `regret`, `not_sure`, or null.
 - Currency: fixed, THB only — not a stored field, implied app-wide.
 
 ## Validation Rules (per field, boundary — zod)
@@ -128,6 +130,7 @@ permanent.
 - `type`: enum per table above.
 - `name` (accounts/categories): required, 1-80 chars.
 - `note`: optional, max 255 chars.
+- `reflection_note`: optional, max 255 chars.
 - `txn_date`: valid ISO date.
 - `updated_at`: valid ISO datetime, client-supplied on writes.
 - transfer: `from_account_id != to_account_id`.
@@ -287,9 +290,9 @@ Transaction body:
 ### Plans
 | Method | Path | Body / Query | Auth Required | Notes |
 |---|---|---|---|---|
-| GET | /api/plans | `?month=YYYY-MM` | Yes | Active plans plus account and budget forecasts. |
+| GET | /api/plans | `?month=YYYY-MM` | Yes | Active plans, confirmed purchase history, and account/budget forecasts. |
 | POST | /api/plans | `{ id, name, amount, accountId, categoryId, plannedDate, waitDays }` | Yes | `waitDays` 0-30, default 7. Planned date moves to end of wait if needed. |
-| PATCH | /api/plans/:id | partial fields | Yes | Increasing price restarts waiting period. |
+| PATCH | /api/plans/:id | active plan fields, or `{ reflection, reflectionNote? }` for a confirmed purchase | Yes | Increasing an active plan price restarts its waiting period. Reflection updates never change its transaction. |
 | DELETE | /api/plans/:id | — | Yes | Permanently deletes active plan. |
 | POST | /api/plans/:id/confirm | — | Yes | After wait ends, creates linked expense dated today. |
 

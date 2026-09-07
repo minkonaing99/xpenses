@@ -122,6 +122,8 @@ Format: [Keep a Changelog](https://keepachangelog.com)
   reduced display typography matching the native iOS scale.
 
 ### Added
+- Purchase reflections on confirmed Plans: editable worth-it, regret, or not-sure
+  rating with an optional note and preserved purchase history.
 - **iPad and new features** - adaptive iPad mini portrait/landscape layouts,
   Ledger URL filters and detail pane, report drill-down, quick-add favorites,
   dashboard customization, dirty-draft guards, and responsive checks.

@@ -10,6 +10,18 @@ async function findAll(pool) {
   return rows
 }
 
+async function findConfirmed(pool) {
+  const [rows] = await pool.query(
+    `SELECT p.*, t.amount AS purchase_amount, t.txn_date AS purchase_date,
+            t.deleted_at AS purchase_deleted_at
+     FROM planned_purchases p
+     LEFT JOIN transactions t ON t.id = p.confirmed_transaction_id
+     WHERE p.status = 'confirmed'
+     ORDER BY t.txn_date DESC, p.created_at DESC`,
+  )
+  return rows
+}
+
 async function findById(pool, id) {
   const [rows] = await pool.query('SELECT * FROM planned_purchases WHERE id = ?', [id])
   return rows[0] || null
@@ -45,4 +57,12 @@ async function confirm(pool, id, transactionId) {
   return findById(pool, id)
 }
 
-module.exports = { findAll, findById, findByIdForUpdate, create, update, remove, confirm }
+async function updateReflection(pool, id, reflection, reflectionNote) {
+  await pool.query(
+    "UPDATE planned_purchases SET reflection = ?, reflection_note = ? WHERE id = ? AND status = 'confirmed'",
+    [reflection, reflectionNote, id],
+  )
+  return findById(pool, id)
+}
+
+module.exports = { findAll, findConfirmed, findById, findByIdForUpdate, create, update, remove, confirm, updateReflection }

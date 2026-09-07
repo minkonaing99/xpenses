@@ -21,3 +21,8 @@ CREATE TABLE planned_purchases (
   CONSTRAINT fk_plan_category FOREIGN KEY (category_id) REFERENCES categories (id),
   CONSTRAINT fk_plan_transaction FOREIGN KEY (confirmed_transaction_id) REFERENCES transactions (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Add purchase reflections to existing Plans installations.
+ALTER TABLE planned_purchases
+  ADD COLUMN reflection VARCHAR(16) NULL,
+  ADD COLUMN reflection_note VARCHAR(255) NULL;

@@ -79,6 +79,9 @@ funds forward. This proposal keeps Xpenses' existing category budgets separate.
 
 ## Purchase reflection
 
+Status: smallest useful version implemented. Confirmed purchase history supports
+an editable rating and optional note. Review timing and summaries remain deferred.
+
 ### Purpose and first version
 
 Learn which planned purchases felt worthwhile after using them.

@@ -72,6 +72,37 @@
   flex: 1;
 }
 
+.plans__review {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.plans__deleted {
+  grid-column: 1 / -1;
+  color: var(--danger);
+}
+
+.plans__reflection-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+.plans__reflection-form {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line);
+}
+
+.plans__note {
+  min-height: 5rem;
+  padding-block: var(--sp-3);
+  resize: vertical;
+}
+
 .planform {
   display: flex;
   flex-direction: column;

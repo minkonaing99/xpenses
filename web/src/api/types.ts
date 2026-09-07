@@ -78,10 +78,22 @@ export interface PlannedPurchase {
   waitUntil: string;
   status: "planned" | "confirmed";
   confirmedTransactionId?: string | null;
+  reflection?: ReflectionRating | null;
+  reflectionNote?: string | null;
+}
+
+export type ReflectionRating = "worth_it" | "regret" | "not_sure";
+
+export interface ConfirmedPurchase extends PlannedPurchase {
+  status: "confirmed";
+  purchaseAmount: number | null;
+  purchaseDate: string | null;
+  purchaseDeletedAt?: string | null;
 }
 
 export interface PlansData {
   plans: PlannedPurchase[];
+  confirmedPurchases: ConfirmedPurchase[];
   accounts: (Account & { planned: number; forecastBalance: number })[];
   budgets: (BudgetStatus & { planned: number; forecastSpent: number; overForecast: boolean })[];
 }

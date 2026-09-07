@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAccounts, useCategories, useConfirmPlan, useCreatePlan, useDeletePlan, usePlans, useSummary, useUpdatePlan } from "../../api/hooks";
-import type { PlannedPurchase } from "../../api/types";
+import type { ConfirmedPurchase, PlannedPurchase, ReflectionRating } from "../../api/types";
 import { useMonth } from "../../app/MonthContext";
 import { today } from "../../lib/format";
 import { bahtToSatang } from "../../lib/money";
@@ -9,6 +9,7 @@ import { Money } from "../../ui/Money";
 import { MoneyInput } from "../../ui/MoneyInput";
 import { PageHeader } from "../../ui/PageHeader";
 import { Select } from "../../ui/Select";
+import { Segmented } from "../../ui/Segmented";
 import { Sheet } from "../../ui/Sheet";
 import { Chips } from "../transactions/Chips";
 import "../../ui/form.css";
@@ -48,8 +49,61 @@ export function PlansScreen() {
         </div>
       </article>)}
     </section>
+    <PurchaseReflections purchases={plans.data?.confirmedPurchases ?? []} />
     <PlanForm open={open} editing={editing} onClose={() => setOpen(false)} />
   </div>;
+}
+
+const reflectionOptions: { value: ReflectionRating; label: string }[] = [
+  { value: "worth_it", label: "Worth it" },
+  { value: "not_sure", label: "Not sure" },
+  { value: "regret", label: "Regret" },
+];
+
+function reflectionLabel(value?: ReflectionRating | null) {
+  return reflectionOptions.find((option) => option.value === value)?.label ?? "Not reviewed";
+}
+
+function PurchaseReflections({ purchases }: { purchases: ConfirmedPurchase[] }) {
+  const update = useUpdatePlan();
+  const [reviewing, setReviewing] = useState<ConfirmedPurchase | null>(null);
+  const [rating, setRating] = useState<ReflectionRating>("not_sure");
+  const [note, setNote] = useState("");
+
+  function openReview(purchase: ConfirmedPurchase) {
+    update.reset();
+    setReviewing(purchase);
+    setRating(purchase.reflection ?? "not_sure");
+    setNote(purchase.reflectionNote ?? "");
+  }
+
+  async function save() {
+    if (!reviewing) return;
+    await update.mutateAsync({ id: reviewing.id, patch: { reflection: rating, reflectionNote: note.trim() || null } });
+    setReviewing(null);
+  }
+
+  return <section className="plans__list plans__reflections">
+    <h2>Purchase reflections</h2>
+    {purchases.length === 0 && <p>No confirmed purchases yet.</p>}
+    {purchases.map((purchase) => {
+      const isReviewing = reviewing?.id === purchase.id;
+      return <article key={purchase.id} className="plans__item">
+      <div><strong>{purchase.name}</strong><span>{purchase.purchaseDate ?? "Date unavailable"} · {reflectionLabel(purchase.reflection)}</span></div>
+      <Money amount={purchase.purchaseAmount ?? purchase.amount} />
+      {purchase.reflectionNote && <p className="plans__reflection-note">{purchase.reflectionNote}</p>}
+      {purchase.purchaseDeletedAt && <small className="plans__deleted">Transaction deleted</small>}
+      <Button variant="quiet" className="plans__review" aria-label={`${isReviewing ? "Cancel reflection" : purchase.reflection ? "Edit reflection" : "Review"} ${purchase.name}`} onClick={() => isReviewing ? setReviewing(null) : openReview(purchase)}>
+        {isReviewing ? "Cancel" : purchase.reflection ? "Edit reflection" : "Review"}
+      </Button>
+      {isReviewing && <div className="plans__reflection-form">
+        <Segmented label="Purchase reflection" options={reflectionOptions} value={rating} onChange={setRating} />
+        <label className="fld"><span className="fld__label">Note (optional)</span><textarea className="add__input plans__note" aria-label="Reflection note" maxLength={255} value={note} onChange={(event) => setNote(event.target.value)} /></label>
+        {update.isError && <p className="aform__error">{update.error.message}</p>}
+        <Button block disabled={update.isPending} onClick={save}>{update.isPending ? "Saving..." : "Save reflection"}</Button>
+      </div>}
+    </article>})}
+  </section>;
 }
 
 function readyAfter(date: string, days: number) {

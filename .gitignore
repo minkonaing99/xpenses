@@ -8,6 +8,8 @@ coverage/
 
 # Claude
 CLAUDE.md
+AGENTS.md
+docs/agentguide.md
 .claude/
 
 # Local MCP config holds the dev API token

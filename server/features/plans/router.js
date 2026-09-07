@@ -16,12 +16,17 @@ const { computeForecast, addWaitDays } = require('./service')
 const repo = require('./repo')
 
 const monthSchema = z.object({ month: z.string().regex(/^\d{4}-\d{2}$/) })
-const planSchema = z.object({
-  id: z.string().uuid(), name: z.string().trim().min(1).max(255), amount: z.number().int().positive(),
+const planFields = {
+  name: z.string().trim().min(1).max(255), amount: z.number().int().positive(),
   accountId: z.string().uuid(), categoryId: z.string().uuid(), plannedDate: z.string().date(),
-  waitDays: z.number().int().min(0).max(30).default(7),
-})
-const patchSchema = planSchema.omit({ id: true }).partial().refine((value) => Object.keys(value).length > 0)
+  waitDays: z.number().int().min(0).max(30),
+}
+const planSchema = z.object({ id: z.string().uuid(), ...planFields, waitDays: planFields.waitDays.default(7) })
+const patchSchema = z.object(planFields).partial().refine((value) => Object.keys(value).length > 0)
+const reflectionSchema = z.object({
+  reflection: z.enum(['worth_it', 'regret', 'not_sure']),
+  reflectionNote: z.string().trim().max(255).nullable().optional(),
+}).strict()
 
 function mapPlan(row) { return rowToCamel(row) }
 function maxDate(a, b) { return a > b ? a : b }
@@ -42,9 +47,9 @@ function createPlansRouter(pool) {
     const parsed = monthSchema.safeParse(req.query)
     if (!parsed.success) return next(new ApiError('VALIDATION_ERROR', parsed.error.issues[0].message))
     try {
-      const [rows, accounts, budgets] = await Promise.all([repo.findAll(pool), accountsRepo.findAllWithSums(pool), budgetsRepo.findAllWithSpent(pool, parsed.data.month)])
+      const [rows, confirmedRows, accounts, budgets] = await Promise.all([repo.findAll(pool), repo.findConfirmed(pool), accountsRepo.findAllWithSums(pool), budgetsRepo.findAllWithSpent(pool, parsed.data.month)])
       const plans = rows.map(mapPlan)
-      res.json(ok({ plans, ...computeForecast({ accounts: accounts.map(mapAccountRow), budgets: budgets.map(rowToCamel), plans, month: parsed.data.month }) }))
+      res.json(ok({ plans, confirmedPurchases: confirmedRows.map(mapPlan), ...computeForecast({ accounts: accounts.map(mapAccountRow), budgets: budgets.map(rowToCamel), plans, month: parsed.data.month }) }))
     } catch (err) { next(err) }
   })
   router.post('/', async (req, res, next) => {
@@ -57,11 +62,20 @@ function createPlansRouter(pool) {
     } catch (err) { next(err) }
   })
   router.patch('/:id', async (req, res, next) => {
-    const parsed = patchSchema.safeParse(req.body)
-    if (!parsed.success) return next(new ApiError('VALIDATION_ERROR', parsed.error.issues[0].message))
     try {
       const current = await repo.findById(pool, req.params.id)
-      if (!current || current.status !== 'planned') throw new ApiError('NOT_FOUND', 'planned purchase not found')
+      if (!current) throw new ApiError('NOT_FOUND', 'purchase not found')
+      if (current.status === 'confirmed') {
+        const parsed = reflectionSchema.safeParse(req.body)
+        if (!parsed.success) throw new ApiError('VALIDATION_ERROR', parsed.error.issues[0].message)
+        const note = parsed.data.reflectionNote === undefined
+          ? current.reflection_note
+          : parsed.data.reflectionNote?.trim() || null
+        return res.json(ok(mapPlan(await repo.updateReflection(pool, req.params.id, parsed.data.reflection, note))))
+      }
+      if (current.status !== 'planned') throw new ApiError('NOT_FOUND', 'planned purchase not found')
+      const parsed = patchSchema.safeParse(req.body)
+      if (!parsed.success) throw new ApiError('VALIDATION_ERROR', parsed.error.issues[0].message)
       const candidate = { ...mapPlan(current), ...parsed.data }
       await assertRefs(pool, candidate)
       const plan = normalizePlan(candidate, todayInBangkok(), parsed.data.amount !== undefined && parsed.data.amount > current.amount)
