@@ -7,6 +7,29 @@ import { api } from "../lib/api";
 import type { Account, Category, RecurringRule, Transaction } from "../api/types";
 
 export const PERSISTED_QUERY_KEY = "xpenses-cache";
+export const PERSIST_MAX_AGE = Infinity;
+export const QUERY_CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 7;
+
+class BlockedWriteError extends Error {
+  readonly code = "BLOCKED_WRITE";
+}
+
+function rejectOutOfOrderWrite(client: QueryClient, variables: unknown) {
+  const mutations = client.getMutationCache().getAll();
+  const current = mutations.find((mutation) => mutation.options.scope?.id === "writes"
+    && mutation.state.status === "pending" && mutation.state.variables === variables);
+  const earlierFailed = current && mutations.some((mutation) =>
+    mutation.options.scope?.id === "writes"
+    && mutation.mutationId < current.mutationId
+    && mutation.state.status === "error");
+  if (earlierFailed) throw new BlockedWriteError("Resolve the earlier failed change first.");
+}
+
+export function pruneExpiredQueries(client: QueryClient, now = Date.now()) {
+  client.removeQueries({
+    predicate: (query) => now - query.state.dataUpdatedAt > QUERY_CACHE_MAX_AGE,
+  });
+}
 
 export const mk = {
   txnCreate: ["txn", "create"] as const,
@@ -39,7 +62,15 @@ export function registerMutationDefaults(qc: QueryClient): void {
     qc.invalidateQueries();
   };
   const def = <V,>(key: readonly string[], mutationFn: (v: V) => Promise<unknown>) =>
-    qc.setMutationDefaults(key, { mutationFn: mutationFn as (v: unknown) => Promise<unknown>, onSettled });
+    qc.setMutationDefaults(key, {
+      mutationFn: async (variables: unknown) => {
+        rejectOutOfOrderWrite(qc, variables);
+        return mutationFn(variables as V);
+      },
+      onSettled,
+      // ponytail: one write lane preserves dependency order; split scopes if write volume grows.
+      scope: { id: "writes" },
+    });
 
   def<Transaction>(mk.txnCreate, (t) => api.post("/transactions", t));
   def<IdPatch<Transaction> & { patch: { updatedAt: string } }>(mk.txnUpdate, (v) =>
@@ -85,7 +116,11 @@ export function makeQueryClient(): QueryClient {
     defaultOptions: {
       queries: { refetchOnWindowFocus: false, staleTime: 30_000, retry: 1 },
       // networkMode 'online' (default): writes pause while offline and resume on reconnect.
-      mutations: { retry: 0 },
+      mutations: { retry: 0, gcTime: Infinity },
+      dehydrate: {
+        shouldDehydrateMutation: (mutation) => Boolean(mutation.options.mutationKey)
+          && (mutation.state.isPaused || mutation.state.status === "error"),
+      },
     },
   });
   registerMutationDefaults(qc);

@@ -3,7 +3,7 @@
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: 40;
   width: 100%;
   max-width: 32rem;
   padding: calc(var(--safe-t) + var(--sp-2)) var(--sp-4) var(--sp-2);
@@ -12,4 +12,79 @@
   font-weight: 600;
   color: var(--accent-ink);
   background: var(--accent);
+}
+
+.offline__open {
+  min-height: 1.75rem;
+  padding-inline: var(--sp-2);
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.sync-list {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.sync-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.sync-row > div {
+  display: grid;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.sync-row span {
+  color: var(--ink-soft);
+  font-size: var(--t-label);
+  overflow-wrap: anywhere;
+}
+
+.sync-row small {
+  color: var(--ink-faint);
+  font-size: var(--t-caption);
+}
+
+.sync-row__status {
+  flex: none;
+  font-weight: 600;
+}
+
+.sync-row__state {
+  display: grid;
+  justify-items: end;
+  gap: var(--sp-2);
+}
+
+.sync-row__retry,
+.sync-row__recover,
+.sync-row__discard {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-full);
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-size: var(--t-label);
+  font-weight: 600;
+}
+
+.sync-row__discard {
+  background: transparent;
+  color: var(--danger);
+}
+
+.sync-row__retry:disabled {
+  opacity: 0.5;
 }

@@ -50,6 +50,15 @@ describe("api client", () => {
     });
   });
 
+  it("treats a skipped write as a conflict", async () => {
+    mockFetch({ ok: true, data: { id: "t1" }, meta: { syncStatus: "skipped" } });
+
+    await expect(api.patch("/transactions/t1", {})).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: "A newer server change was kept.",
+    });
+  });
+
   it("maps a thrown fetch to a NETWORK ApiError", async () => {
     vi.stubGlobal(
       "fetch",

@@ -12,6 +12,8 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
   padding: var(--sp-4) var(--sp-1);
   border-bottom: 1px solid var(--line);
   transition: background-color var(--dur-1) var(--ease-out);

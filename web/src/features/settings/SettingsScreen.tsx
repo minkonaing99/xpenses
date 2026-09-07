@@ -6,6 +6,7 @@ import { PageHeader } from "../../ui/PageHeader";
 import { Segmented } from "../../ui/Segmented";
 import { DashboardCustomizer } from "../dashboard/DashboardCustomizer";
 import { loadDashboardPreferences, saveDashboardPreferences } from "../dashboard/dashboardPreferences";
+import { useUnresolvedWriteCount } from "../../app/pendingWrites";
 import "./SettingsScreen.css";
 
 const MANAGE = [
@@ -23,6 +24,7 @@ const THEMES: { value: Theme; label: string }[] = [
 
 export function SettingsScreen() {
   const logout = useLogout();
+  const unresolvedWrites = useUnresolvedWriteCount();
   const [customizing, setCustomizing] = useState(false);
   const [preferences, setPreferences] = useState(loadDashboardPreferences);
   const [theme, setTheme] = useState<Theme>(() =>
@@ -36,6 +38,10 @@ export function SettingsScreen() {
   function updatePreferences(next: typeof preferences) { setPreferences(next); saveDashboardPreferences(next); }
 
   async function signOut() {
+    if (unresolvedWrites > 0) {
+      const changes = `${unresolvedWrites} unsent ${unresolvedWrites === 1 ? "change" : "changes"}`;
+      if (!window.confirm(`Sign out and discard ${changes}?`)) return;
+    }
     try {
       await logout.mutateAsync();
       location.reload();

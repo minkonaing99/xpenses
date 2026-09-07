@@ -122,6 +122,11 @@ Format: [Keep a Changelog](https://keepachangelog.com)
   reduced display typography matching the native iOS scale.
 
 ### Added
+- **Pending sync activity** - a global count and detail sheet now expose queued,
+  sending, and failed writes with submission times. Safe network/server failures
+  support guarded retry, validation conflicts link back to their editor, failed
+  writes survive reloads, writes replay FIFO, and sign-out warns before clearing
+  unresolved work.
 - Purchase reflections on confirmed Plans: editable worth-it, regret, or not-sure
   rating with an optional note and preserved purchase history.
 - **iPad and new features** - adaptive iPad mini portrait/landscape layouts,

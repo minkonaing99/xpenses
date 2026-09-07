@@ -78,8 +78,9 @@ React Query is the single source of server state. There is no hand-rolled
 sync engine.
 
 - **Reads:** cached in memory and **persisted to `localStorage`**
-  (`PersistQueryClientProvider` + `createSyncStoragePersister`, 7-day maxAge).
-  Last-known data renders offline; refetches when back online.
+  (`PersistQueryClientProvider` + `createSyncStoragePersister`). Read entries
+  older than seven days are removed after restore. Last-known data renders
+  offline; refetches when back online.
 - **Ledger pagination:** the selected month loads up to 200 transactions first.
   "Load older transactions" follows the API cursor until the month is complete.
 - **Writes:** every mutation's `mutationFn` + invalidation is registered as a
@@ -87,6 +88,13 @@ sync engine.
   `networkMode: 'online'` **pauses** a write made offline and **auto-resumes**
   it on reconnect; because the fn lives in the client (not just a hook), a
   paused write survives a reload and replays via `resumePausedMutations()`.
+- **Sync activity:** queued, sending, and failed writes appear in a compact
+  global banner and detail sheet. Network/server failures can be retried;
+  validation conflicts return to the owning screen. Writes share one FIFO lane
+  so dependent offline changes preserve submission order.
+- **Recovery:** paused and failed keyed mutations remain persisted until server
+  acknowledgement or explicit discard. Sign-out
+  confirms before clearing unresolved work. Active queries still refetch when stale.
 - **Idempotency:** transactions use client-generated UUIDs; edits/deletes carry
   `updatedAt` (last-write-wins). Replays are safe against the server's upsert.
 - **Invalidation:** after any write the client refetches broadly

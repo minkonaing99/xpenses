@@ -305,11 +305,12 @@
   .ledger-detail {
     position: sticky;
     top: var(--sp-4);
+    margin-top: var(--sp-3);
     padding: var(--sp-5);
     background: var(--paper-raised);
     border: 0;
     border-radius: var(--r-lg);
-    box-shadow: var(--shadow-1);
+    box-shadow: var(--shadow-2);
   }
 
   .ledger-detail__eyebrow,

@@ -111,6 +111,11 @@ review delay, not a requirement for every kind of purchase.
 
 ## Pending sync list
 
+Status: smallest useful version implemented. Pending and failed writes are
+visible with submission time and recovery status. Safe failures can be retried;
+validation conflicts link back to their owning screen. Unresolved writes persist
+until acknowledgement or explicit discard, and sign-out warns before clearing them.
+
 ### Purpose and first version
 
 Make unsent and failed changes visible so users know whether a save reached
@@ -119,7 +124,8 @@ banner; inspect current behavior before introducing any additional storage.
 
 - Show a compact pending count with an action to open the list.
 - Each row shows action, record summary, local submission time, and status.
-- Distinguish "Waiting for connection", "Sending", and "Needs attention".
+- Distinguish "Waiting for connection", "Waiting to send", "Sending", and
+  "Needs attention".
 - Resume eligible paused writes on reconnect through the existing mechanism.
 - Offer retry for recoverable failures, keeping the original operation identity.
 - Explain validation errors with a correction path; request login for expired sessions.

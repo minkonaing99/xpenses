@@ -48,7 +48,11 @@ async function requestEnvelope<T>(path: string, init?: RequestInit): Promise<Suc
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  return (await requestEnvelope<T>(path, init)).data;
+  const envelope = await requestEnvelope<T>(path, init);
+  if (init?.method && envelope.meta?.syncStatus === "skipped") {
+    throw new ApiError("CONFLICT", "A newer server change was kept.", 409);
+  }
+  return envelope.data;
 }
 
 async function getPage<T>(path: string): Promise<{ data: T; nextCursor: string | null }> {

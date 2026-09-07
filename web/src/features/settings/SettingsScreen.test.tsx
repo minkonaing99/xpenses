@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { onlineManager } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../lib/api", async (orig) => {
@@ -7,10 +8,22 @@ vi.mock("../../lib/api", async (orig) => {
 });
 
 import { api } from "../../lib/api";
+import { useCreateTransaction } from "../../api/hooks";
+import type { Transaction } from "../../api/types";
 import { SettingsScreen } from "./SettingsScreen";
 import { renderApp } from "../../test/utils";
 
 const reload = vi.fn();
+const txn: Transaction = {
+  id: "t1", type: "expense", amount: 10000, note: "Coffee", categoryId: "c1",
+  accountId: "a1", fromAccountId: null, toAccountId: null,
+  txnDate: "2026-09-07", updatedAt: "2026-09-07T12:00:00.000Z",
+};
+
+function PendingLogout() {
+  const create = useCreateTransaction();
+  return <><button onClick={() => create.mutate(txn)}>Queue expense</button>{create.isPaused && <span>Queued</span>}<SettingsScreen /></>;
+}
 
 beforeEach(() => {
   vi.mocked(api.post).mockResolvedValue({} as never);
@@ -22,6 +35,7 @@ beforeEach(() => {
   vi.stubGlobal("location", { ...window.location, reload });
 });
 afterEach(() => {
+  onlineManager.setOnline(true);
   vi.clearAllMocks();
   vi.unstubAllGlobals();
   delete document.documentElement.dataset.theme;
@@ -81,5 +95,18 @@ describe("SettingsScreen", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
     await waitFor(() => expect(reload).toHaveBeenCalledTimes(1));
+  });
+
+  it("asks before sign out discards an unresolved write", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    onlineManager.setOnline(false);
+    renderApp(<PendingLogout />);
+    fireEvent.click(screen.getByRole("button", { name: "Queue expense" }));
+    expect(await screen.findByText("Queued")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    expect(confirm).toHaveBeenCalledWith("Sign out and discard 1 unsent change?");
+    expect(api.post).not.toHaveBeenCalled();
   });
 });
