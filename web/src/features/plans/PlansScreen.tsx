@@ -88,14 +88,23 @@ function PurchaseReflections({ purchases }: { purchases: ConfirmedPurchase[] }) 
     {purchases.length === 0 && <p>No confirmed purchases yet.</p>}
     {purchases.map((purchase) => {
       const isReviewing = reviewing?.id === purchase.id;
-      return <article key={purchase.id} className="plans__item">
-      <div><strong>{purchase.name}</strong><span>{purchase.purchaseDate ?? "Date unavailable"} · {reflectionLabel(purchase.reflection)}</span></div>
-      <Money amount={purchase.purchaseAmount ?? purchase.amount} />
+      const reflection = purchase.reflection ?? "unreviewed";
+      return <article key={purchase.id} className="plans__item plans__reflection-card">
+      <header className="plans__reflection-header">
+        <div className="plans__reflection-title">
+          <strong>{purchase.name}</strong>
+          <div className="plans__reflection-meta">
+            {purchase.purchaseDate ? <time dateTime={purchase.purchaseDate}>{purchase.purchaseDate}</time> : <span>Date unavailable</span>}
+            <span className={`plans__reflection-rating plans__reflection-rating--${reflection}`}>{reflectionLabel(purchase.reflection)}</span>
+            <Button variant="quiet" className="plans__review" aria-label={`${isReviewing ? "Cancel reflection" : purchase.reflection ? "Edit reflection" : "Review"} ${purchase.name}`} onClick={() => isReviewing ? setReviewing(null) : openReview(purchase)}>
+              {isReviewing ? "Cancel" : purchase.reflection ? "Edit" : "Review"}
+            </Button>
+          </div>
+        </div>
+        <Money className="plans__reflection-amount" amount={purchase.purchaseAmount ?? purchase.amount} />
+      </header>
       {purchase.reflectionNote && <p className="plans__reflection-note">{purchase.reflectionNote}</p>}
       {purchase.purchaseDeletedAt && <small className="plans__deleted">Transaction deleted</small>}
-      <Button variant="quiet" className="plans__review" aria-label={`${isReviewing ? "Cancel reflection" : purchase.reflection ? "Edit reflection" : "Review"} ${purchase.name}`} onClick={() => isReviewing ? setReviewing(null) : openReview(purchase)}>
-        {isReviewing ? "Cancel" : purchase.reflection ? "Edit reflection" : "Review"}
-      </Button>
       {isReviewing && <div className="plans__reflection-form">
         <Segmented label="Purchase reflection" options={reflectionOptions} value={rating} onChange={setRating} />
         <label className="fld"><span className="fld__label">Note (optional)</span><textarea className="add__input plans__note" aria-label="Reflection note" maxLength={255} value={note} onChange={(event) => setNote(event.target.value)} /></label>
