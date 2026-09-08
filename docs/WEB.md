@@ -41,7 +41,7 @@ web/src/
                             # Sheet, Chips, PageHeader, MonthSwitcher
   features/
     auth/ dashboard/ transactions/ accounts/
-    categories/ budgets/ recurring/ reports/ settings/
+    categories/ budgets/ recurring/ reports/ savingsPots/ settings/
 ```
 
 ## Screens
@@ -52,7 +52,7 @@ upcoming recurring next 30 days, budget bars, category spend) · Ledger
 52/48 read-only detail split on wide iPads) · Add/Edit transaction sheet
 (expense/income/transfer) · Reports (month stats, category bars, month-over-month
 comparison, daily-spend calendar heatmap) · Settings hub → Accounts / Categories
-/ Budgets / Recurring CRUD, plus a date-range export (CSV or JSON). Month
+/ Budgets / Recurring CRUD, Savings pots, plus a date-range export (CSV or JSON). Month
 navigation is shared across data screens via `MonthContext`.
 
 Dashboard sections can be hidden and reordered. Preferences are stored in
@@ -88,6 +88,9 @@ sync engine.
   `networkMode: 'online'` **pauses** a write made offline and **auto-resumes**
   it on reconnect; because the fn lives in the client (not just a hook), a
   paused write survives a reload and replays via `resumePausedMutations()`.
+- **Savings pots:** create, edit, allocate, release, purchase, and archive
+  mutations use the same persisted FIFO write lane. The `/pots` route is linked
+  from Settings; archived pots remain available in a collapsed section.
 - **Sync activity:** queued, sending, and failed writes appear in a compact
   global banner and detail sheet. Network/server failures can be retried;
   validation conflicts return to the owning screen. Writes share one FIFO lane

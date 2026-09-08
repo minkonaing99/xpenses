@@ -42,6 +42,7 @@ describe('mapAccountRow', () => {
       income_in: 5000,
       transfer_out: 1000,
       transfer_in: 500,
+      pot_reserved: 3000,
     }
     expect(mapAccountRow(row)).toEqual({
       id: 'a1',
@@ -49,6 +50,8 @@ describe('mapAccountRow', () => {
       type: 'cash',
       startingBalance: 10000,
       balance: 12500,
+      reserved: 3000,
+      available: 9500,
       sortOrder: 0,
       createdAt: '2026-07-01 00:00:00',
       updatedAt: '2026-07-01 00:00:00',

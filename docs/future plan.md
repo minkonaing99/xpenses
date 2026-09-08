@@ -4,6 +4,8 @@ Status: ideas for later implementation. No feature implementation authorized by 
 
 ## Savings pots
 
+Implemented on `version3.2.0`; detailed delivery record: `savings-pots-plan.md`.
+
 ### Purpose
 
 Reserve existing money for a trip, emergency fund, laptop, or other goal.

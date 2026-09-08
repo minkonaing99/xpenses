@@ -45,9 +45,10 @@ afterEach(() => {
 describe("SettingsScreen", () => {
   it("links to each management screen", () => {
     renderApp(<SettingsScreen />);
-    for (const label of ["Accounts", "Categories", "Budgets", "Recurring"]) {
+    for (const label of ["Accounts", "Categories", "Budgets", "Recurring", "Savings pots"]) {
       expect(screen.getByRole("link", { name: new RegExp(label) })).toBeInTheDocument();
     }
+    expect(screen.getByRole("link", { name: /Savings pots/ })).toHaveAttribute("href", "/pots");
   });
 
   it("links to the dedicated export page", () => {

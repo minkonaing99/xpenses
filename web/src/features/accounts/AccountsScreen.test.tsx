@@ -11,8 +11,8 @@ import { AccountsScreen } from "./AccountsScreen";
 import { fakeGet, renderApp } from "../../test/utils";
 
 const accounts = [
-  { id: "a1", name: "Cash", type: "cash", startingBalance: 0, balance: 12000 },
-  { id: "a2", name: "Bank", type: "bank", startingBalance: 0, balance: 0 },
+  { id: "a1", name: "Cash", type: "cash", startingBalance: 0, balance: 12000, reserved: 3000, available: 9000 },
+  { id: "a2", name: "Bank", type: "bank", startingBalance: 0, balance: 0, reserved: 0, available: 0 },
 ];
 
 beforeEach(() => {
@@ -24,6 +24,13 @@ beforeEach(() => {
 afterEach(() => vi.clearAllMocks());
 
 describe("AccountsScreen", () => {
+  it("shows balance and pot-adjusted available money", async () => {
+    renderApp(<AccountsScreen />);
+    expect(await screen.findByText((_text, node) =>
+      node?.classList.contains("arow__type") === true && node.textContent?.includes("Available ฿90.00") === true,
+    )).toBeInTheDocument();
+  });
+
   it("creates a new account with the typed values", async () => {
     renderApp(<AccountsScreen />);
     fireEvent.click(await screen.findByRole("button", { name: "Add" }));

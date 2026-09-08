@@ -14,6 +14,7 @@ const MANAGE = [
   { to: "/settings/categories", label: "Categories", desc: "How expenses are grouped" },
   { to: "/settings/budgets", label: "Budgets", desc: "Monthly limits per category" },
   { to: "/settings/recurring", label: "Recurring", desc: "Auto-inserted transactions" },
+  { to: "/pots", label: "Savings pots", desc: "Reserve account money for goals" },
   { to: "/settings/export", label: "Export", desc: "Download your transactions" },
 ];
 

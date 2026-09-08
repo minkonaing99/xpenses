@@ -63,7 +63,8 @@ export function DashboardScreen() {
     accountsBudgets: <>
       {preferences.visible.accounts && <Card title="Accounts">
         {(accounts.data ?? []).map((a) => <div key={a.id} className="acct">
-          <span className="acct__name">{a.name}</span><Money amount={a.balance} className="acct__bal" />
+          <span className="acct__name">{a.name}{(a.reserved ?? 0) > 0 && <small>Available <Money amount={a.available ?? a.balance} /></small>}</span>
+          <Money amount={a.balance} className="acct__bal" />
         </div>)}
         {accounts.isLoading && <RowSkeleton n={2} />}
       </Card>}

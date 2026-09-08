@@ -4,7 +4,15 @@
 // persisted cache is restored. See main.tsx for the persister wiring.
 import { QueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api";
-import type { Account, Category, RecurringRule, Transaction } from "../api/types";
+import type {
+  Account,
+  Category,
+  RecurringRule,
+  SavingsPotCreate,
+  SavingsPotMovementCreate,
+  SavingsPotSpendCreate,
+  Transaction,
+} from "../api/types";
 
 export const PERSISTED_QUERY_KEY = "xpenses-cache";
 export const PERSIST_MAX_AGE = Infinity;
@@ -51,6 +59,11 @@ export const mk = {
   planUpdate: ["plan", "update"] as const,
   planDelete: ["plan", "delete"] as const,
   planConfirm: ["plan", "confirm"] as const,
+  potCreate: ["pot", "create"] as const,
+  potUpdate: ["pot", "update"] as const,
+  potMovement: ["pot", "movement"] as const,
+  potSpend: ["pot", "spend"] as const,
+  potArchive: ["pot", "archive"] as const,
 };
 
 type IdPatch<T> = { id: string; patch: Partial<T> };
@@ -109,6 +122,17 @@ export function registerMutationDefaults(qc: QueryClient): void {
   def<{ id: string; patch: Partial<import("../api/types").PlannedPurchase> }>(mk.planUpdate, (v) => api.patch(`/plans/${v.id}`, v.patch));
   def<string>(mk.planDelete, (id) => api.del(`/plans/${id}`));
   def<string>(mk.planConfirm, (id) => api.post(`/plans/${id}/confirm`, {}));
+  def<SavingsPotCreate>(mk.potCreate, (pot) => api.post("/savings-pots", pot));
+  def<{ id: string; patch: { name?: string; targetAmount?: number } }>(mk.potUpdate, (v) =>
+    api.patch(`/savings-pots/${v.id}`, v.patch),
+  );
+  def<SavingsPotMovementCreate>(mk.potMovement, ({ potId, ...movement }) =>
+    api.post(`/savings-pots/${potId}/movements`, movement),
+  );
+  def<SavingsPotSpendCreate>(mk.potSpend, ({ potId, ...expense }) =>
+    api.post(`/savings-pots/${potId}/spend`, expense),
+  );
+  def<string>(mk.potArchive, (id) => api.post(`/savings-pots/${id}/archive`, {}));
 }
 
 export function makeQueryClient(): QueryClient {

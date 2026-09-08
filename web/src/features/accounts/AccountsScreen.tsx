@@ -45,7 +45,7 @@ export function AccountsScreen() {
             <button className="arow" onClick={() => setForm(a)}>
               <div className="arow__text">
                 <span className="arow__name">{a.name}</span>
-                <span className="arow__type">{a.type}</span>
+                <span className="arow__type">{a.type}{(a.reserved ?? 0) > 0 && <> · Available <Money amount={a.available ?? a.balance} /></>}</span>
               </div>
               <Money amount={a.balance} className="arow__bal" />
             </button>

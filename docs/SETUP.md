@@ -122,6 +122,10 @@ Format: [Keep a Changelog](https://keepachangelog.com)
   reduced display typography matching the native iOS scale.
 
 ### Added
+- **Savings pots** - reserve existing account money for named goals without
+  changing balances or reports. Includes allocation/release history, atomic
+  pot-funded expenses, reserve-safe expense edits/deletes, zero-only archive,
+  persisted offline writes, and migration `005_savings_pots.sql`.
 - **Pending sync activity** - a global count and detail sheet now expose queued,
   sending, and failed writes with submission times. Safe network/server failures
   support guarded retry, validation conflicts link back to their editor, failed

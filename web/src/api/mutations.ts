@@ -7,6 +7,7 @@ import { api } from "../lib/api";
 import { mk, PERSISTED_QUERY_KEY } from "../app/queryClient";
 import type { Account, Category, RecurringRule, Transaction } from "./types";
 import type { PlannedPurchase } from "./types";
+import type { SavingsPotCreate, SavingsPotMovementCreate, SavingsPotSpendCreate } from "./types";
 
 /* auth — online-only, never queued offline */
 export function useLogout() {
@@ -96,3 +97,21 @@ export function useUpdatePlan() {
 }
 export function useDeletePlan() { return useMutation<unknown, Error, string>({ mutationKey: mk.planDelete }); }
 export function useConfirmPlan() { return useMutation<unknown, Error, string>({ mutationKey: mk.planConfirm }); }
+
+export function useCreateSavingsPot() {
+  return useMutation<unknown, Error, SavingsPotCreate>({ mutationKey: mk.potCreate });
+}
+export function useUpdateSavingsPot() {
+  return useMutation<unknown, Error, { id: string; patch: { name?: string; targetAmount?: number } }>({
+    mutationKey: mk.potUpdate,
+  });
+}
+export function useCreateSavingsPotMovement() {
+  return useMutation<unknown, Error, SavingsPotMovementCreate>({ mutationKey: mk.potMovement });
+}
+export function useSpendSavingsPot() {
+  return useMutation<unknown, Error, SavingsPotSpendCreate>({ mutationKey: mk.potSpend });
+}
+export function useArchiveSavingsPot() {
+  return useMutation<unknown, Error, string>({ mutationKey: mk.potArchive });
+}

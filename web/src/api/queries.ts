@@ -16,6 +16,7 @@ import type {
   TxnType,
   UpcomingRecurring,
   PlansData,
+  SavingsPotsData,
 } from "./types";
 
 export function useMe() {
@@ -130,6 +131,13 @@ export function useUpcomingRange(from: string, to: string) {
 
 export function usePlans(month: string) {
   return useQuery({ queryKey: keys.plans(month), queryFn: () => api.get<PlansData>(`/plans?month=${month}`) });
+}
+
+export function useSavingsPots() {
+  return useQuery({
+    queryKey: keys.savingsPots,
+    queryFn: () => api.get<SavingsPotsData>("/savings-pots"),
+  });
 }
 
 /** Latest transactions across all months — powers quick-add "repeat" templates. */

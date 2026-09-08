@@ -206,8 +206,12 @@
 }
 
 .acct__name {
+  display: grid;
+  gap: 2px;
   color: var(--ink-soft);
 }
+
+.acct__name small { color: var(--ink-faint); font-size: var(--t-caption); }
 
 .acct__bal {
   font-weight: 650;

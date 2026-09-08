@@ -12,8 +12,8 @@ import { fakeGet, renderApp } from "../../test/utils";
 import { money } from "../../test/money";
 
 const accounts = [
-  { id: "a1", name: "Cash", type: "cash", startingBalance: 0, balance: 12000 },
-  { id: "a2", name: "Bank", type: "bank", startingBalance: 0, balance: 8000 },
+  { id: "a1", name: "Cash", type: "cash", startingBalance: 0, balance: 12000, reserved: 3000, available: 9000 },
+  { id: "a2", name: "Bank", type: "bank", startingBalance: 0, balance: 8000, reserved: 0, available: 8000 },
 ];
 const summary = { accounts, monthIncome: 50000, monthExpense: 30000, monthNet: 20000 };
 const budgets = [{ id: "b1", categoryId: "c1", limitAmount: 100000, spent: 30000, over: false }];
@@ -47,6 +47,13 @@ describe("DashboardScreen", () => {
     // netWorth (12000+8000) and monthNet both format to ฿200.00 in this fixture.
     expect((await screen.findAllByText(money("฿200.00"))).length).toBeGreaterThan(0);
     expect(screen.getByText("Total balance")).toBeInTheDocument();
+  });
+
+  it("shows pot-adjusted account availability", async () => {
+    renderApp(<DashboardScreen />);
+    expect(await screen.findByText((_text, node) =>
+      node?.tagName === "SMALL" && node.textContent === "Available ฿90.00",
+    )).toBeInTheDocument();
   });
 
   it("masks the balance until tapped", async () => {

@@ -9,6 +9,8 @@ export interface Account {
   type: AccountType;
   startingBalance: number;
   balance: number; // computed current balance (satang)
+  reserved?: number; // savings-pot reserve; optional for restored older caches
+  available?: number; // balance minus reserve
 }
 
 export interface Category {
@@ -96,6 +98,64 @@ export interface PlansData {
   confirmedPurchases: ConfirmedPurchase[];
   accounts: (Account & { planned: number; forecastBalance: number })[];
   budgets: (BudgetStatus & { planned: number; forecastSpent: number; overForecast: boolean })[];
+}
+
+export type SavingsPotHistoryType = "allocate" | "release" | "purchase";
+
+export interface SavingsPotHistoryItem {
+  id: string;
+  potId: string;
+  type: SavingsPotHistoryType;
+  amount: number;
+  note?: string | null;
+  txnDate?: string | null;
+  deletedAt?: string | null;
+  createdAt: string;
+}
+
+export interface SavingsPot {
+  id: string;
+  name: string;
+  targetAmount: number;
+  accountId: string;
+  accountName: string;
+  reserved: number;
+  progress: number;
+  accountBalance: number;
+  accountAvailable: number;
+  shortfall: number;
+  archivedAt?: string | null;
+  history: SavingsPotHistoryItem[];
+}
+
+export interface SavingsPotsData {
+  active: SavingsPot[];
+  archived: SavingsPot[];
+}
+
+export interface SavingsPotCreate {
+  id: string;
+  name: string;
+  targetAmount: number;
+  accountId: string;
+}
+
+export interface SavingsPotMovementCreate {
+  id: string;
+  potId: string;
+  type: "allocate" | "release";
+  amount: number;
+  note?: string;
+}
+
+export interface SavingsPotSpendCreate {
+  id: string;
+  potId: string;
+  amount: number;
+  categoryId: string;
+  note?: string | null;
+  txnDate: string;
+  updatedAt: string;
 }
 
 // A recurring rule projected onto a concrete upcoming date.

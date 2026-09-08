@@ -8,18 +8,24 @@ function computeBalance({ startingBalance, expenseOut, incomeIn, transferOut, tr
 }
 
 function mapAccountRow(row) {
-  const { expense_out: expenseOut, income_in: incomeIn, transfer_out: transferOut, transfer_in: transferIn, ...accountRow } = row
+  const {
+    expense_out: expenseOut, income_in: incomeIn, transfer_out: transferOut,
+    transfer_in: transferIn, pot_reserved: potReserved = 0, ...accountRow
+  } = row
   const account = rowToCamel(accountRow)
+  const balance = computeBalance({
+    startingBalance: account.startingBalance,
+    expenseOut: Number(expenseOut),
+    incomeIn: Number(incomeIn),
+    transferOut: Number(transferOut),
+    transferIn: Number(transferIn),
+  })
   return {
     ...account,
     // mysql2 returns SUM() results as DECIMAL strings, not numbers.
-    balance: computeBalance({
-      startingBalance: account.startingBalance,
-      expenseOut: Number(expenseOut),
-      incomeIn: Number(incomeIn),
-      transferOut: Number(transferOut),
-      transferIn: Number(transferIn),
-    }),
+    balance,
+    reserved: Number(potReserved),
+    available: balance - Number(potReserved),
   }
 }
 

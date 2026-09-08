@@ -111,12 +111,28 @@ one expense transaction and links it to the plan. Deleting an active plan is
 permanent. Confirmed plans remain available as purchase history and may store
 one editable reflection rating and optional note.
 
+### savings_pots
+Named reserves held inside one account. Allocation and release movements do not
+change account balance. Reserved money is derived as allocations minus releases
+minus live linked purchase transactions. A pot may be archived only at zero
+reserve.
+
+### savings_pot_movements
+Immutable, client-ID-keyed allocation or release entries. Each row belongs to
+one pot and stores a positive satang amount plus an optional note.
+
+### savings_pot_purchases
+Links one expense transaction to one pot. Editing or soft-deleting that expense
+recalculates the pot reserve from the live transaction state.
+
 ## Relationships (ERD-style)
 - Account has many Transactions (as account_id, from_account_id, to_account_id).
 - Category has many Transactions (as category_id).
 - Category has one Budget (unique category_id).
 - RecurringRule has many RecurringRuns; each RecurringRun references one
   generated Transaction.
+- Account has many SavingsPots; each pot has many immutable movements and
+  linked purchase transactions.
 
 ## Enums / Constants
 - `transactions.type` / `recurring_rules.type`: `expense`, `income`, `transfer`.
@@ -173,7 +189,7 @@ to MySQL.
 
 ## Migration Strategy
 Plain ordered SQL files run by `db/migrate.js`: `001_init.sql` (tables) ->
-`002_seed.sql` (accounts+categories). Naming convention: zero-padded sequence
+`002_seed.sql` (accounts+categories) through `005_savings_pots.sql`. Naming convention: zero-padded sequence
 prefix + short snake_case description (`00N_description.sql`). A
 `schema_migrations(version, applied_at)` table tracks applied files; the
 runner applies any file not yet recorded, in filename order. No down-migrations
@@ -220,7 +236,7 @@ Codes: `VALIDATION_ERROR`(400) `UNAUTHORIZED`(401) `NOT_FOUND`(404)
 ### Accounts
 | Method | Path | Body / Query | Auth Required | Notes |
 |---|---|---|---|---|
-| GET    | /api/accounts | — | Yes | List incl. computed current balance. |
+| GET    | /api/accounts | — | Yes | List incl. computed `balance`, pot `reserved`, and `available = balance - reserved`. |
 | POST   | /api/accounts | `{ id, name, type, startingBalance }` | Yes | id = client UUID. |
 | PATCH  | /api/accounts/:id | partial | Yes | LWW via updatedAt. |
 | DELETE | /api/accounts/:id | — | Yes | 409 if referenced by txns. Soft delete. |
@@ -296,6 +312,16 @@ Transaction body:
 | PATCH | /api/plans/:id | active plan fields, or `{ reflection, reflectionNote? }` for a confirmed purchase | Yes | Increasing an active plan price restarts its waiting period. Reflection updates never change its transaction. |
 | DELETE | /api/plans/:id | — | Yes | Permanently deletes active plan. |
 | POST | /api/plans/:id/confirm | — | Yes | After wait ends, creates linked expense dated today. |
+
+### Savings pots
+| Method | Path | Body | Auth Required | Notes |
+|---|---|---|---|---|
+| GET | /api/savings-pots | — | Yes | Active and archived pots with derived reserve, account availability, and history. |
+| POST | /api/savings-pots | `{ id, name, targetAmount, accountId }` | Yes | Idempotent create. Does not move account money. |
+| PATCH | /api/savings-pots/:id | `{ name?, targetAmount? }` | Yes | Edit active pot metadata. |
+| POST | /api/savings-pots/:id/movements | `{ id, type, amount, note? }` | Yes | Atomic allocate or release. Idempotent on movement ID. |
+| POST | /api/savings-pots/:id/spend | expense body | Yes | Atomically creates an expense in the pot account and links it to the pot. |
+| POST | /api/savings-pots/:id/archive | — | Yes | Requires zero reserve. |
 
 ### Reports
 | Method | Path | Query | Auth Required | Notes |

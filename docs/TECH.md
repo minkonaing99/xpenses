@@ -37,6 +37,7 @@ server/
     budgets/    (routes, repo, service, __tests__)
     recurring/  (routes, repo, service, cron, __tests__)
     reports/    (routes, service, __tests__)
+    savingsPots/(routes, repo, service, __tests__)
     entityWrites/ (shared write interface, schemas, business rules)
   lib/money.js           # satang helpers (pure, immutable)
   lib/apiResponse.js     # success/error envelope
@@ -50,6 +51,11 @@ server/
 3. REST maps the result to an HTTP envelope. Sync maps the same result to a
    per-operation status. Replay mode changes idempotency only, not business
    validation or integrity rules.
+
+Savings-pot allocation and spending use explicit InnoDB transactions and row
+locks. Allocation locks the account before the pot, preventing parallel writes
+from reserving the same available balance twice. Pot-funded spending creates
+the expense and purchase link atomically.
 
 ## 5. Data Flow — Reads / Sync
 - `GET /api/sync?since=<updated_at>` returns changed categories,

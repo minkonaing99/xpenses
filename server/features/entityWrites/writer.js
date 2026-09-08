@@ -9,9 +9,10 @@ const budgetsRepo = require('../budgets/repo')
 const { currentMonth, mapBudgetRow } = require('../budgets/service')
 const categoriesRepo = require('../categories/repo')
 const recurringRepo = require('../recurring/repo')
+const savingsPotsRepo = require('../savingsPots/repo')
 const { normalizeResumePatch } = require('../recurring/scheduler')
 const transactionsRepo = require('../transactions/repo')
-const { validateTransactionFields } = require('../transactions/service')
+const { shouldApply, validateTransactionFields } = require('../transactions/service')
 const { todayInBangkok } = require('../../cron/dateUtil')
 const {
   accountCreateSchema,
@@ -273,17 +274,58 @@ async function writeRecurring(pool, { action, id, payload, replay }) {
   throw new ApiError('VALIDATION_ERROR', 'unknown write action')
 }
 
+function validateLinkedPotExpense(existing, pot, patch) {
+  const incomingUpdatedAt = toMysqlDatetime(patch.updatedAt)
+  if (!shouldApply(incomingUpdatedAt, existing.updated_at)) return
+  if ((patch.type ?? existing.type) !== 'expense') {
+    throw new ApiError('CONFLICT', 'pot-funded transaction must remain an expense')
+  }
+  const accountId = Object.hasOwn(patch, 'accountId') ? patch.accountId : existing.account_id
+  if (accountId !== pot.account_id) {
+    throw new ApiError('CONFLICT', 'pot-funded expense must stay in its savings pot account')
+  }
+  const amount = patch.amount ?? Number(existing.amount)
+  if (pot.archived_at && (patch.deleted || amount !== Number(existing.amount))) {
+    throw new ApiError('CONFLICT', 'archived savings pot purchases cannot change reserved money')
+  }
+  const reserveBeforeExpense = Number(pot.allocated) - Number(pot.released)
+    - Number(pot.spent) + Number(existing.amount)
+  if (amount > reserveBeforeExpense) {
+    throw new ApiError('CONFLICT', 'expense exceeds pot reserve')
+  }
+}
+
+async function writeLinkedPotExpense(pool, existing, patch, write) {
+  const link = await savingsPotsRepo.findPurchaseByTransactionId(pool, existing.id)
+  if (!link) return write(pool)
+  const candidate = await savingsPotsRepo.findById(pool, link.pot_id)
+  if (!candidate) throw new ApiError('CONFLICT', 'linked savings pot not found')
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
+    await accountsRepo.findByIdForUpdate(connection, candidate.account_id)
+    const pot = await savingsPotsRepo.findByIdForUpdate(connection, link.pot_id)
+    const locked = await transactionsRepo.findByIdAnyForUpdate(connection, existing.id)
+    if (!pot || !locked) throw new ApiError('CONFLICT', 'linked savings pot changed; try again')
+    validateLinkedPotExpense(locked, await savingsPotsRepo.findById(connection, pot.id), patch)
+    const result = await write(connection)
+    await connection.commit()
+    return result
+  } catch (err) {
+    await connection.rollback()
+    throw err
+  } finally { connection.release() }
+}
+
 async function createTransaction(pool, payload) {
   const transaction = parse(transactionCreateSchema, payload)
   validateTransactionShape(transaction)
-  const result = await transactionsRepo.upsert(pool, {
-    ...transaction,
-    updatedAt: toMysqlDatetime(transaction.updatedAt),
-  })
-  return outcome(transaction.id, rowToCamel(result.row), {
-    status: result.status,
-    created: result.created,
-  })
+  const saved = { ...transaction, updatedAt: toMysqlDatetime(transaction.updatedAt) }
+  const existing = await transactionsRepo.findByIdAny(pool, transaction.id)
+  const result = existing
+    ? await writeLinkedPotExpense(pool, existing, transaction, (target) => transactionsRepo.upsert(target, saved))
+    : await transactionsRepo.upsert(pool, saved)
+  return outcome(transaction.id, rowToCamel(result.row), { status: result.status, created: result.created })
 }
 
 async function updateTransaction(pool, id, payload) {
@@ -292,10 +334,10 @@ async function updateTransaction(pool, id, payload) {
   if (!existing) throw new ApiError('NOT_FOUND', 'transaction not found')
 
   validateTransactionShape({ ...rowToCamel(existing), ...patch })
-  const result = await transactionsRepo.updateGuarded(pool, id, {
-    ...patch,
-    updatedAt: toMysqlDatetime(patch.updatedAt),
-  })
+  const saved = { ...patch, updatedAt: toMysqlDatetime(patch.updatedAt) }
+  const result = await writeLinkedPotExpense(
+    pool, existing, patch, (target) => transactionsRepo.updateGuarded(target, id, saved),
+  )
   if (result.status === 'not_found') throw new ApiError('NOT_FOUND', 'transaction not found')
   return outcome(id, rowToCamel(result.row), { status: result.status })
 }
@@ -305,7 +347,10 @@ async function deleteTransaction(pool, id, payload) {
   const existing = await transactionsRepo.findById(pool, id)
   if (!existing) throw new ApiError('NOT_FOUND', 'transaction not found')
 
-  const result = await transactionsRepo.softDeleteGuarded(pool, id, toMysqlDatetime(body.updatedAt))
+  const result = await writeLinkedPotExpense(
+    pool, existing, { ...body, deleted: true },
+    (target) => transactionsRepo.softDeleteGuarded(target, id, toMysqlDatetime(body.updatedAt)),
+  )
   if (result.status === 'not_found') throw new ApiError('NOT_FOUND', 'transaction not found')
   return outcome(id, null, { status: result.status })
 }

@@ -16,6 +16,7 @@ export const keys = {
   upcoming: (days: number) => ["upcoming", days] as const,
   upcomingRange: (from: string, to: string) => ["upcoming", from, to] as const,
   plans: (month: string) => ["plans", month] as const,
+  savingsPots: ["savingsPots"] as const,
 };
 
 /** Every month-scoped query. Invalidate all after a txn write. */

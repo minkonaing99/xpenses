@@ -35,6 +35,11 @@ const ACTIONS = new Map<string, string>([
   [mk.planUpdate.join(":"), "Edit plan"],
   [mk.planDelete.join(":"), "Delete plan"],
   [mk.planConfirm.join(":"), "Confirm purchase"],
+  [mk.potCreate.join(":"), "Add savings pot"],
+  [mk.potUpdate.join(":"), "Edit savings pot"],
+  [mk.potMovement.join(":"), "Move savings pot money"],
+  [mk.potSpend.join(":"), "Spend savings pot money"],
+  [mk.potArchive.join(":"), "Archive savings pot"],
 ]);
 
 function keyName(key: readonly unknown[] | undefined) {
@@ -61,6 +66,7 @@ function recoveryFor(key: readonly unknown[] | undefined) {
     case "category": return { recoveryHref: "/settings/categories", recoveryLabel: "Open Categories" };
     case "budget": return { recoveryHref: "/settings/budgets", recoveryLabel: "Open Budgets" };
     case "recurring": return { recoveryHref: "/settings/recurring", recoveryLabel: "Open Recurring" };
+    case "pot": return { recoveryHref: "/pots", recoveryLabel: "Open Savings Pots" };
     default: return { recoveryHref: "/plans", recoveryLabel: "Open Plans" };
   }
 }
